@@ -1,5 +1,6 @@
 \documentclass[a4j,12pt]{gradthesis_utf8}
 %\usepackage[dviout]{graphicx}
+\usepackage[dvipdfmx]{graphicx}
 \usepackage{graphicx}
 %
 %%% ドラフトモード(図表は，図表のみのページになる)
@@ -47,7 +48,6 @@ Hiroshima City University}
 \chapter{はじめに}\label{sec:sec1}
 %%% abst %%%
 はじめに
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 第2章
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -55,12 +55,14 @@ Hiroshima City University}
 本章ではまず，動画配信方式の一つであるプログレッシブダウンロードについて述べる.
 
 \section{プログレッシブダウンロード方式}
-プログレッシブダウンロード
+ネットワークの大容量化,高速化に伴い,Youtube[]やNetflix[]などの動画配信サービスの利用が増加している.動画配信サービスにはUDPを利用したストリーミング,TCPを利用したプログレッシブダウンロードの2種類がある.アプリケーションプロトコルとしてHTTPを用いるプログレッシブダウンロードは特別なソフトウェアを必要とせず,ブラウザだけで視聴することができるため,近年広く普及してきている.また,プログレッシブダウンロードは分割順次ダウンロードとも呼称される.\\
+プログレッシブダウンロードの動作概要は,まず,1つのファイルを複数のあるサイズののブロックに分割する.次に,クライアントは分割されたブロックをサーバーに対してリクエストする.このリクエストの方法にはHTTPのRange Headerに分割のための情報を含める方式やHTTPのGETリクエストのクエリストリングに分割のための情報を含める方式などがある.サーバーはリクエストに応じたブロックを送信する.これを繰り返すことで,1つのファイルを取得できる.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  \section{複数経路を用いた通信方式}
- 複数経路
+ 複数のIP接続を束ねて上位層に機能を提供することを目的としたものの一つのMPTCP[]などが提案されている.複数のNICを束ねることで上位層からは1つの仮想的なインターフェースとして扱うことができる.これらは各OSレベルでの実装が必要となるので実装コストが高い.
+ 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  \section{複数のTCP接続を用いた通信方式}
@@ -85,6 +87,31 @@ Hiroshima City University}
 \subsection{テストベッドでの評価}
 
 \subsection{実ネットワークでの評価}
+実ネットワークでの評価にあたりUbuntuのパブリックミラーサーバーを利用した.\\
+使用したサーバー群
+\begin{table}[htb]
+	\begin{tabular}{lll}
+		ホスト & 組織 & 国\\
+		ftp.jaist.ac.jp & JAIST & JP \\
+		ubuntutym2.u-toyama.ac.jp & Univercity of Toyama & JP \\
+		releases.ubuntu.com & Canonical & GB \\
+		mirrorservice.org & University of Kent & GB \\
+		ubuntu.ipacct.com & IPACCT & BG \\
+		mirror.enzu.com & Enzu Inc. & US \\
+		mirror.pop-sc.rnp.br & PoP-SC & BR \\
+		ftp.belnet.be & Belnet & BE \\
+		mirrors.mit.edu & MIT & US \\
+		mirror.yandex.ru & Yandex & RU \\
+	\end{tabular}
+\end{table}
+
+参考 各サーバーの24時間の性能の時間変化
+\begin{figure}
+	\begin{center}
+		\includegraphics[width=15cm]{thp24h.pdf}
+	\end{center}
+\end{figure}
+
 
 \chapter{動画配信サーバーへの適用例}
 \section{プロキシでの実装}
