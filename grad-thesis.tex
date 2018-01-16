@@ -5,6 +5,7 @@
 %\usepackage{algorithmic}
 \usepackage{listings}
 \usepackage{algpseudocode, algorithm}
+\usepackage{url}
 
 \usepackage{indentfirst}
 %
@@ -129,7 +130,7 @@ t=1には接続Aにブロック番号0が到着し,続いて接続Aがにブロ�
     \label{delay}
 \end{figure}
 
-\subsection{固定遅延方式}
+\subsection{固定遅延要求方式}
 \label{kotei}
 固定遅延方式は,予めTCP接続間の性能差をシステムに入力して遅延要求を行うことで到着順序逆転の抑制を試みる方式である.しかし,実ネットワークでは予めTCP接続間の性能差が既知であることは稀であるので実環境への応用は限定的であると言わざるを得ない.よって本研究では本方式は主として,他の方式がどれだけTCP接続間の性能差を正確に把握できているかどうかを比較し確認するために用いる.
 
@@ -162,7 +163,7 @@ t=1には接続Aにブロック番号0が到着し,続いて接続Aがにブロ�
 
 \subsection{予測方法}
 \label{yosokuhouhou}
-本節では具体的な予測アルゴリズムについて述べる。初期遅延度は各TCP接続において計測したHEAD リクエストの応答時間と、すべてのTCP接続の応答時間の最小値との比を用いて算出する。以下に疑似コードを示す。
+本節では具体的な予測アルゴリズムについて述べる.初期遅延度は各TCP接続において計測したHEAD リクエストの応答時間と,すべてのTCP接続の応答時間の最小値との比を用いて算出する.以下に疑似コードを示す.
 
 \begin{algorithm}
 	\caption{Compute Initial Delays}
@@ -182,26 +183,87 @@ t=1には接続Aにブロック番号0が到着し,続いて接続Aがにブロ�
 
 \chapter{実装評価}\label{sec:sec4}
 
-本章では提案方式を実装し、評価する。
+本章では提案方式を実装し,評価する.
 
 \section{重複再要求方式}
-本評価では重複再要求方式として\ref{juhuku}を改良し非有効ブロックの受信回数を閾値として用いる。これは実装上の都合であり、関連研究のアルゴリズムとは若干異なるが本研究では重複再要求のアルゴリズムを比較することは目的としていない。
+本評価では重複再要求方式として\ref{juhuku}を改良し非有効ブロックの受信回数を閾値として用いる.これは実装上の都合であり,関連研究のアルゴリズムとは若干異なるが本研究では重複再要求のアルゴリズムを比較することは目的としていない.
 
 \section{評価項目}
 \label{hyoukakoumoku}
-本章で評価する評価値について整理する。
+本章で評価する評価値について整理する.
+\begin{table}[htb]
+	\begin{center}
+		\caption{評価項目}
+		\begin{tabular}{|c|c|} \hline
+			評価項目 & 概要　\\ \hline \hline
+			平均遅延時間 & ブロックの理想的な到達時刻からどれだけ遅れているか\\ \hline
+			初期バッファリング時間 & 初期バッファリングに必要な時間 \\ \hline
+			平均非有効ブロック数 & バッファ内の非有効ブロックの数 \\ \hline
+			
+		\end{tabular}
+	\end{center}
+\end{table}
+
+\newpage
 
 \section{テストベッドでの評価}
 \label{testbed}
+\ref{networkmodel}にネットワークモデルを示す.TCP接続A-TCP接続B間の性能差は3倍,TCP接続A-TCP接続C間の性能差は10倍である.
+\begin{figure}[h]
+	\label{networkmodel}
+	\begin{center}
+		\includegraphics[width=16cm]{test_network.pdf}
+		\caption{ネットワークモデル}
+	\end{center}
+\end{figure}
+
+\begin{table}[htb]
+	\begin{center}
+		\caption{実験環境}
+		\begin{tabular}{|c|c|} \hline
+			ファイルサイズ & 754MB\\ \hline
+			ファイル &  ubuntu-17.10.1-server-amd64.iso\\ \hline
+			OS(Server and Client) & ubuntu 17.10 (Kernel 4.13)\\ \hline
+			TCP & CUBIC \\ \hline
+			HTTP Server & h2o v2.2.4 \\ \hline
+		\end{tabular}
+	\end{center}
+\end{table}
+
+\newpage
+
+\begin{figure}[h]
+	\begin{center}
+		\includegraphics[width=15cm]{InitialBufferingTime.pdf}
+		\caption{初期バッファリング時間}
+		\label{ibt}
+	\end{center}
+\end{figure}
+図\ref{ibt}は遅延要求のアルゴリズムごとの初期バッファリング時間である。DIFFは差分計測を用いた遅延要求方式、NORMALは常時最若番を要求する方式(制御を何も行わない)、STATICはTCP接続間の性能差を入力する固定遅延要求方式である。図\ref{ibt}より差分計測を用いた遅延要求方式はTCP接続間の性能差を入力することなく固定遅延要求方式に近い性能を獲得できていると言える。
+
+\newpage
+
+\begin{figure}[h]
+	\begin{center}
+		\includegraphics[width=15cm]{NumberOfBlocksStayingInBuffer.pdf}
+		\caption{非有効ブロック数}
+		\label{nsb}
+	\end{center}
+\end{figure}
+
+図\ref{nsb}は遅延要求のアルゴリズムごとの初期バッファリング時間である。DIFFは差分計測を用いた遅延要求方式、NORMALは常時最若番を要求する方式(制御を何も行わない)、STATICはTCP接続間の性能差を入力する固定遅延要求方式である。図\ref{ibt}より差分計測を用いた遅延要求方式はTCP接続間の性能差を入力することなく固定遅延要求方式に近い性能を獲得できていると言える。
+
+\newpage
 
 \section{公開ネットワークでの評価}
 \label{pub}
-公開ネットワークでの評価にあたりUbuntuのパブリックミラーを利用した.\\
+公開ネットワークでの評価にあたりUbuntuのパブリックミラーを利用した.\ref{tablemirror}に使用したパブリックミラーを示す。また、参考として各パブリックミラーの24時間の性能変化について図\ref{24h}に示す
 \begin{table}[htb]
 	\begin{center}
 		\caption{使用したパブリックミラー}
+		\label{tablemirror}
 		\begin{tabular}{|l|l|l|} \hline
-			ホスト & 組織 & 国\\ \hline
+			ホスト & 組織 & 国\\ \hline \hline
 			ftp.jaist.ac.jp & JAIST & JP \\
 			ubuntutym2.u-toyama.ac.jp & Univercity of Toyama & JP \\
 			releases.ubuntu.com & Canonical & GB \\
@@ -216,10 +278,11 @@ t=1には接続Aにブロック番号0が到着し,続いて接続Aがにブロ�
 	\end{center}
 \end{table}
 
-\begin{figure}
+\begin{figure}[h]
     \begin{center}
-        \includegraphics[width=15cm]{thp24h.pdf}
-        \caption{各ミラーの24時間の性能の変化}
+        \includegraphics[width=12cm]{thp24h.pdf}
+        \caption{各パブリックミラーの24時間の性能の変化}
+        \label{24h}
     \end{center}
 \end{figure}
 
@@ -237,6 +300,8 @@ t=1には接続Aにブロック番号0が到着し,続いて接続Aがにブロ�
 
 \chapter{付録}
 \section{ソースコード}
+本研究で実装したソースコードはすべてGitHubにて公開している。\\
+\url{https://github.com/johejo/sphttp}
 \section{プロキシのプロトタイプを用いた実装}
 
 \clearpage
