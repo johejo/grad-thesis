@@ -251,7 +251,7 @@ t=1には接続Aにブロック番号0が到着し,続いて接続Aがにブロ�
 	\end{center}
 \end{figure}
 
-図\ref{nsb}は遅延要求のアルゴリズムごとの初期バッファリング時間である.DIFFは差分計測を用いた遅延要求方式,NORMALは常時最若番を要求する方式(制御を何も行わない),STATICはTCP接続間の性能差を入力する固定遅延要求方式である.図\ref{ibt}より差分計測を用いた遅延要求方式はTCP接続間の性能差を入力することなく固定遅延要求方式に近い性能を獲得できていると言える.
+図\ref{nsb}は遅延要求のアルゴリズムごとの非有効ブロック数である.DIFFは差分計測を用いた遅延要求方式,NORMALは常時最若番を要求する方式(制御を何も行わない),STATICはTCP接続間の性能差を入力する固定遅延要求方式である.図\ref{ibt}より差分計測を用いた遅延要求方式はTCP接続間の性能差を入力することなく固定遅延要求方式に近い性能を獲得できていると言える.
 
 \newpage
 
@@ -287,22 +287,36 @@ t=1には接続Aにブロック番号0が到着し,続いて接続Aがにブロ�
 \end{figure}
 
 \newpage
+
+\begin{figure}[h]
+	\begin{center}
+		\includegraphics[width=15cm]{InitialBufferingTimePubIBRC.pdf}
+		\caption{初期バッファリング時間}
+		\label{ibtpub}
+	\end{center}
+\end{figure}
+
+\newpage
+
+\begin{figure}[h]
+	\begin{center}
+		\includegraphics[width=15cm]{NumberOfBlocksStayingInBufferPubIBRC.pdf}
+		\caption{非有効ブロック数}
+		\label{nsbpub}
+	\end{center}
+\end{figure}
  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 第X章
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{今後の課題}\label{sec:sec7}
+\chapter{まとめと今後の課題}\label{sec:sec7}
+\section{まとめ}
+\section{今後の課題}
 \hspace*{0.5em}今後の課題として, 以下が挙げられる.
 \begin{itemize}
     \item 実際のユーザー体験を考慮した評価
     \item タイマ駆動要求方式の実装との比較
 \end{itemize}
-
-\chapter{付録}
-\section{ソースコード}
-本研究で実装したソースコードはすべてGitHubにて公開している.\\
-\url{https://github.com/johejo/sphttp}
-\section{プロキシのプロトタイプを用いた実装}
 
 \clearpage
 %
