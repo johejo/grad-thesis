@@ -88,7 +88,7 @@ Hiroshima City University}
  複数のTCP接続を束ねることでグッドプットを向上させても,受信ブロックが有効ブロックでない限りは応答性は低下してしまい,動画の再生が停止するなどしてユーザー体験は悪化することが予想できる.
 \begin{figure}[h]
 \centering
-\includegraphics[width=18cm]{block.pdf}
+\includegraphics[width=18cm]{figure/block.pdf}
 \caption{ブロックの有効性}
 \label{block}
 \end{figure}
@@ -104,7 +104,7 @@ Hiroshima City University}
  
  \begin{figure}[h]
      \centering
-     \includegraphics[width=18cm]{block_dup.pdf}
+     \includegraphics[width=18cm]{figure/block_dup.pdf}
      \caption{重複再要求の模式図}
      \label{blockdup}
  \end{figure}
@@ -146,7 +146,7 @@ t=1には接続Aにブロック番号0が到着し,続いて接続Aがにブロ�
 
  \begin{figure}[h]
     \centering
-    \includegraphics[width=16.25cm]{delay.pdf}
+    \includegraphics[width=16.25cm]{figure/delay.pdf}
     \caption{遅延要求の模式図}
     \label{delay}
 \end{figure}
@@ -254,12 +254,12 @@ t=1には接続Aにブロック番号0が到着し,続いて接続Aがにブロ�
 	\begin{center}
 		\caption{実験環境}
 		\begin{tabular}{|c|c|} \hline
-			ファイルサイズ & 754MB\\ \hline
+			ファイルサイズ & 754MByte\\ \hline
 			ファイル &  ubuntu-17.10.1-server-amd64.iso\\ \hline
 			OS(Server and Client) & ubuntu 17.10 (Kernel 4.13)\\ \hline
 			TCP & CUBIC \\ \hline
 			HTTP Server & h2o v2.2.4 \\ \hline
-			ブロックサイズ & \(10^6\) バイト\\ \hline
+			ブロックサイズ & \(10^6\) Byte\\ \hline
 		\end{tabular}
 	\end{center}
 \end{table}
@@ -268,7 +268,7 @@ t=1には接続Aにブロック番号0が到着し,続いて接続Aがにブロ�
 
 \begin{figure}[h]
 	\begin{center}
-		\includegraphics[width=15cm]{InitialBufferingTime.pdf}
+		\includegraphics[width=15cm]{figure/InitialBufferingTime.pdf}
 		\caption{初期バッファリング時間}
 		\label{ibt}
 	\end{center}
@@ -281,7 +281,7 @@ DIFFは差分計測を用いた遅延要求方式,NORMALは常時最若番を要
 
 \begin{figure}[h]
 	\begin{center}
-		\includegraphics[width=15cm]{NumberOfBlocksStayingInBuffer.pdf}
+		\includegraphics[width=15cm]{figure/NumberOfBlocksStayingInBuffer.pdf}
 		\caption{平均非有効ブロック数}
 		\label{nsb}
 	\end{center}
@@ -322,7 +322,7 @@ DIFFは差分計測を用いた遅延要求方式,NORMALは常時最若番を要
 
 \begin{figure}[h]
     \begin{center}
-        \includegraphics[width=15cm]{thp24h.pdf}
+        \includegraphics[width=15cm]{figure/thp24h.pdf}
         \caption{各パブリックミラーの24時間の性能の変化}
         \label{24h}
     \end{center}
@@ -334,7 +334,7 @@ DIFFは差分計測を用いた遅延要求方式,NORMALは常時最若番を要
 
 \begin{figure}[h]
 	\begin{center}
-		\includegraphics[width=11.9cm]{TypicalPlotDelay=NORMALInit=FalseDup=IBRC.pdf}
+		\includegraphics[width=11.9cm]{figure/TypicalPlotDelay=NORMALInit=FalseDup=IBRC.pdf}
 		\caption{遅延要求なしの場合の受信の様子}
 		\label{tpdnpub}
 	\end{center}
@@ -342,7 +342,7 @@ DIFFは差分計測を用いた遅延要求方式,NORMALは常時最若番を要
 
 \begin{figure}[h]
 	\begin{center}
-		\includegraphics[width=11.9cm]{TypicalPlotDelay=DIFFInit=TrueDup=IBRC.pdf}
+		\includegraphics[width=11.9cm]{figure/TypicalPlotDelay=DIFFInit=TrueDup=IBRC.pdf}
 		\caption{差分計測を用いた遅延要求をおこなった場合の受信の様子}
 		\label{tpddpub}
 	\end{center}
@@ -352,7 +352,7 @@ DIFFは差分計測を用いた遅延要求方式,NORMALは常時最若番を要
 
 \begin{figure}[h]
 	\begin{center}
-		\includegraphics[width=15cm]{InitialBufferingTimePubIBRC.pdf}
+		\includegraphics[width=15cm]{figure/InitialBufferingTimePubIBRC.pdf}
 		\caption{初期バッファリング時間}
 		\label{ibtpub}
 	\end{center}
@@ -362,7 +362,7 @@ DIFFは差分計測を用いた遅延要求方式,NORMALは常時最若番を要
 
 \begin{figure}[h]
 	\begin{center}
-		\includegraphics[width=15cm]{NumberOfBlocksStayingInBufferPubIBRC.pdf}
+		\includegraphics[width=15cm]{figure/NumberOfBlocksStayingInBufferPubIBRC.pdf}
 		\caption{平均非有効ブロック数}
 		\label{nsbpub}
 	\end{center}
