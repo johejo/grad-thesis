@@ -58,7 +58,13 @@ Hiroshima City University}
 % 第2章
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{関連研究}\label{sec:sec2}
-本章ではまず,動画配信方式の一つであるプログレッシブダウンロードについて述べる.
+本章では関連研究について述べる.
+
+\section{TCP接続を複数用いるHTTP}
+複数のTCP接続を利用することで,より短時間でアプリケーションプロトコルとしてmHTTP\cite{mhttp}が提案されている.
+mHTTPではDNSレコードを複数使用することで複数のTCP接続を確立した上で,既存のHTTPと同等の機能を提供する方式を提案している.この方式ではアプリケーション開発者やコンテンツプロバイダの負担を抑えながらも,複数TCP接続を利用して効率的なダウンロードを実現している.
+
+\newpage
 
 \section{プログレッシブダウンロード方式}
 ネットワークの大容量化,高速化に伴い,Youtube\cite{youtube}やNetflix\cite{netflix}などの動画配信サービスの利用が増加している.
@@ -198,10 +204,21 @@ t=1には接続Aにブロック番号0が到着し,続いて接続Aがにブロ�
 このHEADリクエストの応答時間を計測することで,各TCP接続間の性能差も推測できる.
 ただし,後続のGETリクエストの応答メッセージサイズはHEAD レスポンスのそれよりも大きく,実際には一つのHTTPレスポンスに対して複数のTCPセグメントがやり取りされるので,厳密な意味での応答時間ではなく単一のHEAD レスポンスの応答時間であることに注意が必要である.
 
-\subsection{予測方法}
+\subsection{アルゴリズム}
 \label{yosokuhouhou}
-本節では具体的な予測アルゴリズムについて述べる.
-初期遅延度は各TCP接続において計測したHEAD リクエストの応答時間と,すべてのTCP接続の応答時間の最小値との比を用いて算出する.
+本節では具体的な初期遅延予測アルゴリズムについて述べる.
+
+\subsubsection{初期遅延予測係数}
+ここで定義する遅延予測係数とは,各TCP接続でのHTTP HEAD リクエストの応答時間の比をTCP接続の帯域性能差へ変換するための係数である.
+TCPのウィンドウサイズがネットワーク状況に応じて変化することや高遅延でありながらも広帯域のネットワークが実際に存在することを考慮すると,初期応答時間からTCP接続の性能を単純に予測することは現実的ではない.
+しかし,仮に広帯域であっても高遅延なネットワークではTCPのウィンドウサイズが大きくなるまでに低遅延ネットワークよりも長い時間がかかる.
+また,初期ブロックの到着時刻がユーザー体験に与える影響は大きいと考えられる.
+よって初期リクエストの送信時に限って言えば,多少の性能予測が外れることは許容しても,低性能の可能性がある高遅延なTCP接続にはとにかく初期ブロックを要求させないことが,初期バッファリング時間の短縮につながる.
+各接続における初期リクエスト-レスポンスさえ終了してしまえば,そこからは性能計測は差分予測の役割になる.
+つまり,応答遅延時間から最悪ケースとして冗長的にTCP接続の性能を見積もることで,ユーザー体験の悪化を防ぐことが初期遅延予測係数の役割である.
+
+\subsubsection{算出}
+初期遅延度は各TCP接続において計測したHEAD リクエストの応答時間と,すべてのTCP接続の応答時間の最小値との比に初期遅延予測係数を掛けることで算出する.
 以下に疑似コードを示す.
 
 \begin{algorithm}
@@ -212,7 +229,7 @@ t=1には接続Aにブロック番号0が到着し,続いて接続Aがにブロ�
 		\State {$D \gets Delays $}
 		\State {$C \gets Coefficient$}
 		\ForAll {r in R}
-		\State {$d \leftarrow r \ / \  M \ * \ C$}
+		\State {$d \leftarrow (r \ / \  M - 1) \ * \ C$}
 		\State {$Add\ d\ to\ D$}
 		\EndFor
 	\end{algorithmic}
@@ -224,7 +241,7 @@ t=1には接続Aにブロック番号0が到着し,続いて接続Aがにブロ�
 
 本章では提案方式を実装し,評価する.
 
-\section{評価を対象とする方式}
+\section{評価対象}
 本評価では重複再要求方式として\ref{juhuku}を改良し非有効ブロックの受信回数を閾値として用いる.
 これは実装上の都合であり,関連研究のアルゴリズムとは若干異なるが本研究では重複再要求のアルゴリズムを比較することは目的としていない.
 すでに重複再要求方式の有効性は先行研究において確認されている.
@@ -240,7 +257,6 @@ t=1には接続Aにブロック番号0が到着し,続いて接続Aがにブロ�
 			評価項目 & 概要　\\ \hline \hline
 			初期バッファリング時間 & 初期バッファリングに必要な時間 \\ \hline
 			平均非有効ブロック数 & バッファ内の非有効ブロックの数 \\ \hline
-			
 		\end{tabular}
 	\end{center}
 \end{table}
@@ -258,16 +274,25 @@ t=1には接続Aにブロック番号0が到着し,続いて接続Aがにブロ�
 	\end{center}
 \end{figure}
 
+実験環境および実験パラメータを表\ref{env},表\ref{param}に示す.
+
 \begin{table}[htb]
 	\begin{center}
 		\caption{実験環境}
+		\label{env}
 		\begin{tabular}{|c|c|} \hline
 			ファイルサイズ & 754MByte\\ \hline
 			ファイル &  ubuntu-17.10.1-server-amd64.iso\\ \hline
 			OS(Server and Client) & ubuntu 17.10 (Kernel 4.13)\\ \hline
 			TCP & CUBIC \\ \hline
 			HTTP Server & h2o v2.2.4 \\ \hline
+		\end{tabular}
+		\caption{実験パラメータ}
+		\label{param}
+		\begin{tabular}{|c|c|} \hline
 			ブロックサイズ & \(10^6\) Byte\\ \hline
+			初期遅延予測係数 & 10 \\ \hline
+			重複再要求発行閾値 & 20 \\ \hline
 		\end{tabular}
 	\end{center}
 \end{table}
@@ -297,7 +322,7 @@ DIFFは差分計測を用いた遅延要求方式,NORMALは常時最若番を要
 
 図\ref{nsb}は遅延要求のアルゴリズムごとの非有効ブロック数である.
 DIFFは差分計測を用いた遅延要求方式,NORMALは常時最若番を要求する方式(制御を何も行わない),STATICはTCP接続間の性能差を入力する固定遅延要求方式である.
-図\ref{ibt}より差分計測を用いた遅延要求方式はTCP接続間の性能差を入力することなく固定遅延要求方式に近い性能を獲得できていると言える.
+図\ref{nsb}より差分計測を用いた遅延要求方式はTCP接続間の性能差を入力することなく固定遅延要求方式に近い性能を獲得できていると言える.
 
 \newpage
 
@@ -305,7 +330,7 @@ DIFFは差分計測を用いた遅延要求方式,NORMALは常時最若番を要
 \label{pub}
 パブリックネットワークでの評価にあたり,Ubuntuのリリースイメージファイルの配布に用いられているパブリックミラーを利用した.
 表\ref{tablemirror}に使用したパブリックミラーを示す.
-また,参考として各パブリックミラーの24時間の性能変化について図\ref{24h}に示す.実験の際にダウンロードしたファイルはテストベッドのものと同一である.
+また,参考として各パブリックミラーの24時間の性能変化について図\ref{24h}に示す.実験の際にダウンロードしたファイルおよび実験パラメータはテストベッドのものと同一である.
 図\ref{24h}からわかるように15時から18時においてネットワークの変化が大きいと判断しこの時間帯で実験を行った.
 \begin{table}[htb]
 	\begin{center}
@@ -415,8 +440,15 @@ DIFFは差分計測を用いた遅延要求方式,NORMALは常時最若番を要
 Junichi Funasaka, Atsushi Kawano, and Kenji Ishida: Adaptive Parallel Downloading Method for Proxy Systems, IEICE Trans., Vol.E90-B, No.4, pp.720-727, Apr. 2007.
 
 \bibitem{hiraoka}
-堀場 宏晃,平岡 篤昌,舟阪 淳一,“タイマ駆動による要求方式のプログレッシブダ
-ウンロードへの適用,” 2017 年信学総大,Mar. 2017
+Tokumasa Hiraoka and Junichi Funasaka: A Progressive Download Method Using Multiple TCP Flows on Multiple Paths, Proc. 10th International Conference on Broadband and Wireless Computing, Communication and Applications (BWCCA 2015), pp.318-324, Nov. 2015. 
+
+\bibitem{horiba}
+Hiroaki Horiba, Tokumasa Hiraoka, and Junichi Funasaka: A Progressive Download Method Based on Timer-Driven Requesting Schemes Using Multiple TCP Flows on Multiple Paths, Proc. 37th IEEE ICDCS Workshops, pp.26-31, Jun. 2017.
+
+\bibitem{mhttp}
+Juhoon Kim, Yung-Chih Chen, Ramin Khalili, Don Towsley, Anja Feldmann,
+"Multi-source Multipath HTTP (mHTTP): A Proposal,"
+ACM SIGMETRICS Performance Evaluation Review, vol. 42, No. 1, pp.583--584, 2014.
 
 \bibitem{youtube}
 Youtube.available at https://www.youtube.com,2018.
