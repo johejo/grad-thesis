@@ -6,23 +6,26 @@ PROLOGUE = prologue
 
 CLASS = gradthesis_utf8.cls
 SOURCE = $(THESIS).tex
-PDF = $(THESIS).pdf
+OUTPUT = $(THESIS).pdf
 DVI = $(THESIS).dvi
 
 P_SOURCE = $(PROLOGUE).tex
 P_PDF = $(PROLOGUE).pdf
 P_DVI = $(PROLOGUE).dvi
 
-.PHONY: all
-all: $(PDF) $(P_PDF)
+FIG_DIR = figure
+FIGURE = $(wildcard $(PWD)/$(FIG_DIR)/*.pdf)
 
-$(DVI): $(SOURCE) $(CLASS)
+.PHONY: all
+all: $(OUTPUT) $(P_PDF)
+
+$(DVI): $(SOURCE) $(CLASS) $(FIGURE)
 	$(LATEX) $(SOURCE)
 
-$(PDF): $(DVI)
+$(OUTPUT): $(DVI)
 	$(DVIPDF) $<
 
-$(P_DVI): $(P_SOURCE)
+$(P_DVI): $(P_SOURCE) $(FIGURE)
 	$(LATEX) $<
 
 $(P_PDF): $(P_DVI)
@@ -30,4 +33,4 @@ $(P_PDF): $(P_DVI)
 
 .PHONY: clean
 clean:
-	$(RM) $(PDF) $(P_PDF) *.aux *.log *.dvi *.toc
+	$(RM) $(OUTPUT) $(P_PDF) *.aux *.log *.dvi *.toc

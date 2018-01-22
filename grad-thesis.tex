@@ -27,7 +27,7 @@
 %
 \jtitle{TCP並列接続を用いたプログレッシブダウンロード\\における順序制御方式の実装} % 和文題目
 %
-\etitle{Implementation of sequence control method in progressive download using TCP parallel connection} % 英文題目
+\etitle{Implementation of sequence control method in progressive download using parallel TCP connection} % 英文題目
 %
 \jaffil{広島市立大学 情報科学部 情報工学科}
 \eaffil{Department of Computer and Network Engineering\\
@@ -77,18 +77,27 @@ mHTTPクライアントの構造について図\ref{mhttp}に示す.
 
 \section{プログレッシブダウンロード方式}
 ネットワークの大容量化,高速化に伴い,Youtube\cite{youtube}やNetflix\cite{netflix}などの動画配信サービスの利用が増加している.
-動画配信サービスにはUDPを利用したストリーミング,TCPを利用したプログレッシブダウンロードの2種類がある.
-アプリケーションプロトコルとしてHTTPを用いるプログレッシブダウンロードは特別なソフトウェアを必要とせず,ブラウザだけで視聴することができるため,近年広く普及してきている.
-また,プログレッシブダウンロードは分割順次ダウンロードとも呼称される.
+動画配信サービスにはUDP上に独自のアプリケーションプロトコルをサーバーおよびクライントに実装し利て配信するプッシュベースの方式と,TCP上でHTTPを用いて利用するプルベースの方式などがある.
+中でもアプリケーションプロトコルとしてHTTPを用いるプルベース方式は,エンドユーザーは特別なソフトウェアの準備等をする必要はなく,基本的にはブラウザさえあれば利用可であり,またアプリケーションプロトコルがHTTPであることからサービスの提供者もAkamaiやFastlyに代表されるCDN(Contents Delivery Network)のサービスを利用することで効率の良い配信が可能であるため,近年急速に広がっている.
+HTTPを利用したストリーミング方式としてはHLSやMPEG-DASHがある.
+プログレッシブダウンロードとは,こうしたプルベース方式の中でも基本的なファイルのダウンロードを応用することでファイルを部分的にダウンロードしながらダウンロードの完了した部分からブラウザのレンダリングや動画再生等に利用する方式である.\\
+\ \ \ \ プログレッシブダウンロードでは基本的にはダウンロード済みのデータはキャッシュとして再利用可能であるので,著作権など再利用に制限を加えたい場合や生放送形式での動画配信についてはHLS(HTTP LiveStreaming)\cite{hls}やMPEG-DASH(MPEG-Dynamic Adaptive Streaming over HTTP)\cite{dash}をベースとしてフロントエンドおよびサーバーサイドでの実装が必要である.
 プログレッシブダウンロードの動作概要は,まず,1つのファイルを複数のあるサイズのブロックに分割する.
 次に,クライアントは分割されたブロックをサーバーに対してリクエストする.
 サーバーはリクエストに応じたブロックを送信する.
 これを繰り返すことで,1つのファイルを取得できる.
-このリクエストの方法にはHTTPのRange-Headerに分割のための情報を含める方式やHTTPのGETリクエストのクエリストリングに分割のための情報を含める方式などがある.
-前者はRange-Headerに対応したHTTPサーバーソフトウェアがあれば特別な設定をすることなく利用が可能である.
-後者はフロントエンドおよびバックエンドでの実装が必要であるが,状況に応じて動画の品質を変化させたりするなどしたサービスに応じた柔軟なコントロールが可能である.Youtubeではこちらが用いられている.
+このリクエストの方法の1つにHTTPのRange-Headerに分割のための情報を含める方式がある.
+この方式はRange-Headerに対応したHTTPサーバーがあれば利用が可能である.
+他にもHTTPのGETリクエストのクエリストリングに分割のための情報を含める方式や,HLSやMPEG-DASH等で用いられている事前にファイル情報が書き込まれたファイルを取得し,分割済みのファイルの一部をリクエストする方式などがある.
 
-\newpage
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=16cm]{figure/p-dl.pdf}
+	\caption{プログレッシブダウンロードの模式図}
+	\label{p-dl}
+\end{figure}
+
+\clearpage
 
 \section{複数のTCP接続を用いたプログレッシブダウンロード}
 \label{hukusu}
@@ -123,7 +132,7 @@ mHTTPクライアントの構造について図\ref{mhttp}に示す.
      \label{blockdup}
  \end{figure}
 
-%\newpage
+\newpage
  
  \section{タイマ駆動を用いた要求方式}
  \ref{hukusu}節で述べた複数のTCP接続を用いたプログレッシブダウンロードにおいて起こりうる問題点を解消するために提案されている方式として,タイマ駆動型要求方式がある.
@@ -174,7 +183,7 @@ t=1には接続Aにブロック番号0が到着し,続いて接続Aがにブロ�
 \ref{kotei}節ではあらかじめ各接続間の性能差が既知であるとして,その値にしたがって遅延要求を行う方式について述べる.
 \ref{diff}節では各接続ごとにブロック到着間隔を逐次測定することで性能差を算出し,その値にしたがって遅延要求を行う方式について述べる.
 
- \begin{figure}[ht]
+\begin{figure}[ht]
     \centering
     \includegraphics[width=16.25cm]{figure/delay.pdf}
     \caption{遅延要求の模式図}
@@ -189,18 +198,19 @@ t=1には接続Aにブロック番号0が到着し,続いて接続Aがにブロ�
 固定遅延要求方式の実装は単純である.
 TCP接続の最大帯域性能差比が予めわかっっているので,容易にブロックの予定到着順序がわかる.
 よって予定到着順序を考慮し,正しい順序で到着するように要求送信を並び替えるだけである.
+固定遅延方式は理論上ではほとんどブロックの到達順序逆転を抑制することができる.
 
 \subsection{差分計測を用いた遅延予測方式}
 \label{diff}
 当方式はあるTCP接続に対して何ブロック後ろのブロックを要求するかを算出するために,そのTCP接続の直前のブロック取得間隔を計測し用いる方式である.
 以下に疑似コードを示す.
-最も性能の高いTCP接続には0を割り当てる.
+最も性能の高いTCP接続には最も若番として0を割り当てる.
 
 \begin{algorithm}
 	\caption{Compute Diff}
 	\begin{algorithmic}[1]
 		\State {$T \gets Total\ Receive\ Count$}
-		\State {$P \gets Previous\ Receive\ Counts $}
+		\State {$P \gets Previous\ Total\ Receive\ Counts $}
 		\State {$N \gets Number\ Of\ Connections$}
 		\If{Is it the highest performance} 
 		\State {$D \leftarrow 0$}
@@ -209,6 +219,10 @@ TCP接続の最大帯域性能差比が予めわかっっているので,容易�
 		\EndIf
 	\end{algorithmic}
 \end{algorithm}
+
+このアルゴリズムでは一つ前の送信時から現在まで全体の総受信ブロック数のカウントがいくつ増加したかを計算する.
+なお,このアルゴリズムではTCP接続の性能の時間変化については考慮していない.
+よってTCP接続に急激な性能変化が発生した場合などに予測的な見積もりを行うことはできないので,追従が少し遅れる可能性がある.
 
 \newpage
 
@@ -220,9 +234,18 @@ TCP接続の最大帯域性能差比が予めわかっっているので,容易�
 
 \subsection{概要}
 \label{shokigaiyo}
-\ref{chienyokyuhoshiki}節の遅延要求方式ではファイル情報を取得するために,事前にHTTPのHEADリクエストを相手サーバーに送信している.
-このHEADリクエストの応答時間を計測することで,各TCP接続間の性能差も推測できる.
-ただし,後続のGETリクエストの応答メッセージサイズはHEAD レスポンスのそれよりも大きく,実際には一つのHTTPレスポンスに対して複数のTCPセグメントがやり取りされるので,厳密な意味での応答時間ではなく単一のHEAD リクエスト-レスポンスの応答時間であることに注意が必要である.
+\ref{chienyokyuhoshiki}節の遅延要求方式では,事前にHTTPのHEADリクエストを相手サーバーに送信し,ファイルサイズ等の情報を取得する.
+このHEADリクエスト-レスポンスの応答時間を計測することで,各TCP接続間の性能差も推測できる.
+ただし,後続のGETリクエストの応答メッセージサイズはHEADリクエストのそれよりも大きく,実際には一つのHTTPレスポンスに対して複数のTCPセグメントがやり取りされるので,厳密な意味での応答時間ではなく単一のHEADリクエスト-レスポンスの応答時間であることに注意が必要である.
+図\ref{head}に初期遅延予測の模式図を示す.
+D(a), D(b)間の比からT(a), T(b)間の比を予測することが初期遅延予測の目的である.
+
+\begin{figure}[ht]
+	\centering
+	\includegraphics[width=15cm]{figure/head.pdf}
+	\caption{初期遅延予測の模式図}
+	\label{head}
+\end{figure}
 
 \newpage
 
@@ -237,7 +260,7 @@ TCPのウィンドウサイズがネットワーク状況に応じて変化す�
 また,初期ブロックの到着時刻がユーザー体験に与える影響は大きいと考えられる.
 よって初期リクエストの送信時に限って言えば,多少の性能予測が外れることは許容しても,低性能の可能性がある高遅延なTCP接続にはとにかく初期ブロックを要求させないことが,初期バッファリング時間の短縮につながる.
 各接続における初期リクエスト-レスポンスさえ終了してしまえば,そこからは性能計測は差分予測の役割になる.
-つまり,応答遅延時間から最悪ケースとして冗長的にTCP接続の性能を見積もることで,ユーザー体験の悪化を防ぐことが初期遅延予測係数の役割である.
+つまり,応答遅延時間から最悪ケースとして冗長的にTCP接続の性能を見積もることで,ユーザー体験の悪化を防ぐことが目的である.
 
 \subsubsection{算出}
 初期遅延度は各TCP接続において計測したHEAD リクエストの応答時間と,すべてのTCP接続の応答時間の最小値との比に初期遅延予測係数を掛けることで算出する.
@@ -265,25 +288,43 @@ TCPのウィンドウサイズがネットワーク状況に応じて変化す�
 
 \section{評価対象}
 本評価では重複再要求方式として\ref{juhuku}を改良し非有効ブロックの受信回数を閾値として用いる.
-これは実装上の都合であり,関連研究のアルゴリズムとは若干異なるが本研究では重複再要求のアルゴリズムを比較することは目的としていない.
-すでに重複再要求方式の有効性は先行研究において確認されている.
-よって以降全ての実験は重複再要求を有効にして行うこととする.
+これは実装上の都合であり,関連研究のアルゴリズムとは若干異なるが本研究では重複再要求の実装方式を比較することは目的としない.
+既に重複再要求方式の有効性は先行研究において確認されているので,全ての実験は重複再要求を行うことを前提としている.
 
 \section{評価項目}
 \label{hyoukakoumoku}
-本章で評価する評価値について整理する.
+本節では本章で行う実験で評価する評価値について整理する.
+表\ref{hyoka}に評価項目についてまとめる.
+
+初期バッファリング時間とは,ブロックの理想的な到達時刻からどのくらい遅れているかか表す遅延時間の最大値である.
+動画再生を想定して言い換えると,獲得できたグッドプットを維持しながら停止せずに再生するために必要な再生開始時の待ち時間だと言える.
+平均遅延時間は理想的なブロック到着時刻からの正の遅延時間の平均値である.
+初期バッファリング時間と平均遅延時間についての模式図を図\ref{buf}に示す.
+
+\newpage
+
 \begin{table}[htb]
 	\begin{center}
 		\caption{評価項目}
+		\label{hyoka}
 		\begin{tabular}{|c|c|} \hline
 			評価項目 & 概要　\\ \hline \hline
 			初期バッファリング時間 & 初期バッファリングに必要な時間 \\ \hline
-			平均非有効ブロック数 & バッファ内の非有効ブロックの数 \\ \hline
+			平均非有効ブロック数 & バッファ内の非有効ブロックの数の平均値 \\ \hline
+			平均遅延時間 & 理想的なブロック到着時刻からの遅延時間の平均値 \\ \hline
 		\end{tabular}
 	\end{center}
 \end{table}
 
-\newpage
+\begin{figure}[ht]
+	\label{buf}
+	\begin{center}
+		\includegraphics[width=17cm]{figure/initialBuffering.pdf}
+		\caption{初期バッファリング時間と平均遅延時間の模式図}
+	\end{center}
+\end{figure}
+
+\clearpage
 
 \section{テストベッドでの評価}
 \label{testbed}
@@ -320,35 +361,39 @@ TCPのウィンドウサイズがネットワーク状況に応じて変化す�
 	\end{center}
 \end{table}
 
-\newpage
-
 図\ref{ibt}は遅延要求のアルゴリズムごとの初期バッファリング時間である.
-図\ref{nsb}は遅延要求のアルゴリズムごとの非有効ブロック数である.
+図\ref{nsb}は遅延要求のアルゴリズムごとの平均非有効ブロック数である.
+図\ref{adt}は遅延要求のアルゴリズムごとの平均遅延時間である.
+また,評価値はすべて10回試行の平均である.
 DIFFは差分計測を用いた遅延要求方式,NORMALは常時最若番を要求する方式(制御を何も行わない),STATICはTCP接続間の性能差を入力する固定遅延要求方式である.
-固定遅延方式は理論上ではほとんどブロックの到達順序逆転を抑制することができる.
-このテストベッドでは,差分計測を用いた遅延要求方式はネットワークの情報を入力することなく固定遅延方式
+このテストベッドでは,差分計測を用いた遅延要求方式は固定遅延方式と同程度の初期バッファリング時間,平均非有効ブロック数および平均遅延時間が得られた.
+よって差分計測を用いた遅延要求方式はネットワークの情報を入力しなくても,固定遅延方式に匹敵する十分な性能が得られたと言える.
 
-\newpage
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=14cm]{figure/InitialBufferingTime.pdf}
+	\caption{初期バッファリング時間}
+	\label{ibt}
+\end{figure}
 
-\begin{figure}[ht]
+\begin{figure}[h]
 	\begin{center}
-		\includegraphics[width=12.125cm]{figure/InitialBufferingTime.pdf}
-		\caption{初期バッファリング時間}
-		\label{ibt}
+		\begin{tabular}{cc}
+			\begin{minipage}[t]{0.9\hsize}
+				\includegraphics[width=14cm]{figure/NumberOfBlocksStayingInBuffer.pdf}
+				\caption{非有効ブロック数}
+				\label{nsb}
+			\end{minipage}\\
+			\begin{minipage}[t]{0.9\hsize}
+				\includegraphics[width=14cm]{figure/AverageDelayTime.pdf}
+				\caption{平均遅延時間}
+				\label{adt}
+			\end{minipage}\\
+		\end{tabular}
 	\end{center}
 \end{figure}
 
-\begin{figure}[ht]
-	\begin{center}
-		\includegraphics[width=12.125cm]{figure/NumberOfBlocksStayingInBuffer.pdf}
-		\caption{平均非有効ブロック数}
-		\label{nsb}
-	\end{center}
-\end{figure}
-
-
-
-\newpage
+\clearpage
 
 \section{パブリックネットワークでの評価}
 \label{pub}
@@ -375,53 +420,66 @@ DIFFは差分計測を用いた遅延要求方式,NORMALは常時最若番を要
 	\end{center}
 \end{table}
 
-\newpage
+パブリックミラーを利用した実験の結果を図\ref{ibtpub},図\ref{nsbpub}および図\ref{adtpub}に示す.
+DIFFは差分計測を用いた遅延要求方式,NORMALは常時最若番を要求する方式(制御を何も行わない)方式である.
+ネットワークの情報が未知の場合でも差分計測を用いた遅延要求方式は,制御を行わない場合と比較して
 
 \begin{figure}[ht]
     \begin{center}
-        \includegraphics[width=15cm]{figure/thp24h.pdf}
-        \caption{各パブリックミラーの24時間の性能の変化}
-        \label{24h}
+        \begin{tabular}{cc}
+        	\begin{minipage}[t]{0.9\hsize}
+        		\includegraphics[width=14cm]{figure/thp24h.pdf}
+        		\caption{各パブリックミラーの24時間の性能の変化}
+        		\label{24h}
+        	\end{minipage}\\
+        	\begin{minipage}[t]{0.9\hsize}
+        		\includegraphics[width=14cm]{figure/InitialBufferingTimePub.pdf}
+        		\caption{初期バッファリング時間}
+        		\label{ibtpub}
+        	\end{minipage}\\
+
+        \end{tabular}
     \end{center}
 \end{figure}
 
-\newpage
+\begin{figure}[ht]
+	\begin{center}
+		\begin{tabular}{cc}
+        	\begin{minipage}[t]{0.9\hsize}
+				\includegraphics[width=14cm]{figure/NumberOfBlocksStayingInBufferPub.pdf}
+				\caption{平均非有効ブロック数}
+				\label{nsbpub}
+			\end{minipage}\\
+			\begin{minipage}[t]{0.9\hsize}
+				\includegraphics[width=14cm]{figure/AverageDelayTimePub.pdf}
+				\caption{平均遅延時間}
+				\label{adtpub}
+			\end{minipage}
+		\end{tabular}
+	\end{center}
+\end{figure}
+
+\clearpage
 
 典型的な受信の様子についてのグラフを図\ref{tpdnpub}および図\ref{tpddpub}に示す.
-
 \begin{figure}[ht]
 	\begin{center}
-		\includegraphics[width=11.9cm]{figure/TypicalPlotDelay=NORMALInit=FalseDup=IBRC.pdf}
-		\caption{遅延要求なしの場合の受信の様子}
-		\label{tpdnpub}
-	\end{center}
-\end{figure}
-
-\begin{figure}[ht]
-	\begin{center}
-		\includegraphics[width=11.9cm]{figure/TypicalPlotDelay=DIFFInit=TrueDup=IBRC.pdf}
-		\caption{差分計測を用いた遅延要求をおこなった場合の受信の様子}
-		\label{tpddpub}
+		\begin{tabular}{cc}
+			\begin{minipage}[t]{0.8\hsize}
+				\includegraphics[width=12.5cm]{figure/TypicalPlotDelay=NORMALInit=FalseDup=IBRC.pdf}
+				\caption{遅延要求なしの場合の受信の様子}
+				\label{tpdnpub}
+			\end{minipage}\\
+			\begin{minipage}[t]{0.8\hsize}
+				\includegraphics[width=12.5cm]{figure/TypicalPlotDelay=DIFFInit=TrueDup=IBRC.pdf}
+				\caption{差分計測を用いた遅延要求をおこなった場合の受信の様子}
+				\label{tpddpub}
+			\end{minipage}
+		\end{tabular}
 	\end{center}
 \end{figure}
 
 \newpage
-
-\begin{figure}[ht]
-	\begin{center}
-		\includegraphics[width=12.125cm]{figure/InitialBufferingTimePub.pdf}
-		\caption{初期バッファリング時間}
-		\label{ibtpub}
-	\end{center}
-\end{figure}
-
-\begin{figure}[ht]
-	\begin{center}
-		\includegraphics[width=12.125cm]{figure/NumberOfBlocksStayingInBufferPub.pdf}
-		\caption{平均非有効ブロック数}
-		\label{nsbpub}
-	\end{center}
-\end{figure}
  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 第X章
@@ -484,6 +542,12 @@ Ubuntu Mirrors.available at https://launchpad.net/ubuntu/+cdmirrors, 2018.
 
 \bibitem{vlc}
 VLC.available at　https://www.videolan.org/index.html, 2018.
+
+\bibitem{hls}
+Apple Inc., "HTTP Live Streaming (HLS) - Apple Developer", https://developer.apple.com/streaming/
+
+\bibitem{dash}
+ISO org., "ISO/IEC 23009-1:2014 - Information technology -- Dynamic adaptive streaming over HTTP (DASH) -- Part 1: Media presentation description and segment formats", https://www.iso.org/standard/65274.html
 
 \end {thebibliography}
 
