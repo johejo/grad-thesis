@@ -31,8 +31,18 @@
 \typeout{Special thanks to Uni as Nakamoto}
 
 %\input jreport.sty
+%\input jreport.cls
+%\input ujreport.cls
+\RequirePackage{ifuptex,ifluatex}
+%\ifluatex
+%\input ltjsreport.cls
+%\else
+\ifupTeX
+\input ujreport.cls
+\else
 \input jreport.cls
-
+\fi
+%\fi
 
 
 

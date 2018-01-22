@@ -6,8 +6,9 @@
 \usepackage{listings}
 \usepackage{algpseudocode,algorithm}
 \usepackage{url}
-
+\usepackage{minipage-marginpar}
 \usepackage{indentfirst}
+
 %
 %%% ドラフトモード(図表は,図表のみのページになる)
 %\draftmode
@@ -65,7 +66,7 @@ Hiroshima City University}
 mHTTPではDNSレコードを複数使用することで複数のTCP接続を確立した上で,既存のHTTPと同等の機能を提供する方式を提案している.この方式ではアプリケーション開発者やコンテンツプロバイダに大きな仕様変更を強いることなく,複数TCP接続を利用して効率的なダウンロードを実現している.
 mHTTPクライアントの構造について図\ref{mhttp}に示す.
 
-\begin{figure}[h]
+\begin{figure}[ht]
 	\centering
 	\includegraphics[width=16cm]{figure/mhttp.pdf}
 	\caption{mHTTPの構造}
@@ -88,25 +89,22 @@ mHTTPクライアントの構造について図\ref{mhttp}に示す.
 後者はフロントエンドおよびバックエンドでの実装が必要であるが,状況に応じて動画の品質を変化させたりするなどしたサービスに応じた柔軟なコントロールが可能である.Youtubeではこちらが用いられている.
 
 \newpage
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
- \section{複数のTCP接続を用いたプログレッシブダウンロード}
- \label{hukusu}
- ネットワークの発展に伴い,大容量のデータをTCPを用いて,通信する機会が増加しつつある.TCPには輻輳回避のためにウィンドウ制御が存在する.
- このため,ウィンドウサイズを遅延で割ったものが単一TCP接続における理論最大性能となる.
- 近年ではコンテンツの大容量化が進んでおり,より効率よくコンテンツをダウンロードするためにアプリケーション層から複数のTCP接続を用いる手法が提案されている.
- 図\ref{block}は複数のTCPを接続を用いたプログレッシブダウンロードの分割されたブロックの受信の様子を示した例である.
- 複数のブロックを性能の異なる別々のTCP接続に対して要求を行う場合,ブロックの再生順番と受信完了順序が一致しない可能性がある.
- 図\ref{block}が示すように,先頭から連続するブロック1及びブロック2は再生可能である(有効ブロック)が,それ以外のブロック3及びブロック5は未受信のブロックを間に挟んでいるため再生することはできない(非有効ブロック).
- 複数のTCP接続を束ねることでグッドプットを向上させても,受信ブロックが有効ブロックでない限りは応答性は低下してしまい,動画の再生が停止するなどしてユーザー体験は悪化することが予想できる.
-\begin{figure}[h]
-\centering
-\includegraphics[width=18cm]{figure/block.pdf}
-\caption{ブロックの有効性}
-\label{block}
+\section{複数のTCP接続を用いたプログレッシブダウンロード}
+\label{hukusu}
+ネットワークの発展に伴い,大容量のデータをTCPを用いて,通信する機会が増加しつつある.TCPには輻輳回避のためにウィンドウ制御が存在する.
+このため,ウィンドウサイズを遅延で割ったものが単一TCP接続における理論最大性能となる.
+近年ではコンテンツの大容量化が進んでおり,より効率よくコンテンツをダウンロードするためにアプリケーション層から複数のTCP接続を用いる手法が提案されている.
+図\ref{block}は複数のTCPを接続を用いたプログレッシブダウンロードの分割されたブロックの受信の様子を示した例である.
+複数のブロックを性能の異なる別々のTCP接続に対して要求を行う場合,ブロックの再生順番と受信完了順序が一致しない可能性がある.
+図\ref{block}が示すように,先頭から連続するブロック1及びブロック2は再生可能である(有効ブロック)が,それ以外のブロック3及びブロック5は未受信のブロックを間に挟んでいるため再生することはできない(非有効ブロック).
+複数のTCP接続を束ねることでグッドプットを向上させても,受信ブロックが有効ブロックでない限りは応答性は低下してしまい,動画の再生が停止するなどしてユーザー体験は悪化することが予想できる.
+ 
+\begin{figure}[ht]
+	\centering
+	\includegraphics[width=18cm]{figure/block.pdf}
+	\caption{ブロックの有効性}
+	\label{block}
 \end{figure}
 
  %%%%%%%%%%%%%
@@ -118,15 +116,14 @@ mHTTPクライアントの構造について図\ref{mhttp}に示す.
  図\ref{blockdup}の例では重複再要求を行い,ブロック2を取得することで少なくともでもブロック3が非有効ブロックである状態を解消することができる.
  この操作を受信イベントが発生するたびに繰り返すことで,バッファ上の非有効ブロックの個数の増加を抑制することができ,応答性の向上が見込まれる.
  
- \begin{figure}[h]
+ \begin{figure}[ht]
      \centering
      \includegraphics[width=18cm]{figure/block_dup.pdf}
      \caption{重複再要求の模式図}
      \label{blockdup}
  \end{figure}
 
-\newpage
- 
+%\newpage
  
  \section{タイマ駆動を用いた要求方式}
  \ref{hukusu}節で述べた複数のTCP接続を用いたプログレッシブダウンロードにおいて起こりうる問題点を解消するために提案されている方式として,タイマ駆動型要求方式がある.
@@ -139,7 +136,7 @@ mHTTPクライアントの構造について図\ref{mhttp}に示す.
  図\ref{timer}に模式図を示す.
  先行研究としてはタイマ駆動を用いた要求方式において,TCP接続間の性能差を要求の送信間隔に反映させる方式が提案されている.
  
- \begin{figure}[h]
+ \begin{figure}[ht]
  	\centering
  	\includegraphics[width=16.5cm]{figure/timer.pdf}
  	\caption{タイマ駆動方式の模式図}
@@ -149,9 +146,9 @@ mHTTPクライアントの構造について図\ref{mhttp}に示す.
 \chapter{提案方式}\label{sec:sec3}
 本章では性能差のある複数のTCP接続を並列的に利用する際に生じうるいくつかの問題点を解消するためのアルゴリズムを実装した提案方式について述べる.
 また,実際に複数のTCP接続を用いた動画のプログレッシブダウンロードをプログラムに実装する際に考慮すべき点がいくつかある.
-プログレッシブダウンロードの実装は大きく分けて動画ファイルのダウンロードとバイナリファイルをデコードして再生という2つのセクションに分かれている.
+動画のプログレッシブダウンロードの実装は大きく分けて動画ファイルのダウンロードとバイナリをデコードして再生という2つのセクションに分かれている.
 既存のウェブブラウザやVLC\cite{vlc}等のネットワークメディア再生機能付きの動画プレイヤーソフトのではこの2つのセクションは1つのプログラムから高度に同期をとりながら同時並列的に制御されている.
-しかし,本研究では実装の難易度の高さと主としてダウンロードセクションについて論じるためにこれら2つのセクションは分離している.
+しかし,本研究では実装の難易度の高さ,主としてダウンロードセクションについて論じるため,そして公開ネットワーク上での評価を行うためにこれら2つのセクションのうちダウンロードセクションのみを対象とする.
 
 \section{遅延要求方式}
 \label{chienyokyuhoshiki}
@@ -160,6 +157,8 @@ mHTTPクライアントの構造について図\ref{mhttp}に示す.
 \ref{diff}節では未知のネットワーク状況に対応するためにTCP接続の使用回数の差分に注目しブロックの遅延度を推測する方式について提案する.
 また,本研究では各TCP接続には同時に最大でも1つのHTTP リクエスト-レスポンスしか発行しない.
 つまりタイマ駆動方式など用いられているHTTP-パイプラインは用いず,受信駆動モデルで実装を行う.
+
+\newpage
 
 \subsection{遅延要求について}
 \label{chienyokyu}
@@ -175,7 +174,7 @@ t=1には接続Aにブロック番号0が到着し,続いて接続Aがにブロ�
 \ref{kotei}節ではあらかじめ各接続間の性能差が既知であるとして,その値にしたがって遅延要求を行う方式について述べる.
 \ref{diff}節では各接続ごとにブロック到着間隔を逐次測定することで性能差を算出し,その値にしたがって遅延要求を行う方式について述べる.
 
- \begin{figure}[h]
+ \begin{figure}[ht]
     \centering
     \includegraphics[width=16.25cm]{figure/delay.pdf}
     \caption{遅延要求の模式図}
@@ -187,6 +186,9 @@ t=1には接続Aにブロック番号0が到着し,続いて接続Aがにブロ�
 固定遅延方式は,予めTCP接続間の性能差をシステムに入力して遅延要求を行うことで到着順序逆転の抑制を試みる方式である.
 しかし,実ネットワークでは予めTCP接続間の性能差が既知であることは稀であるので実環境への応用は限定的であると言わざるを得ない.
 よって本研究では本方式は主として,他の方式がどれだけTCP接続間の性能差を正確に把握できているかどうかを比較し確認するために用いる.
+固定遅延要求方式の実装は単純である.
+TCP接続の最大帯域性能差比が予めわかっっているので,容易にブロックの予定到着順序がわかる.
+よって予定到着順序を考慮し,正しい順序で到着するように要求送信を並び替えるだけである.
 
 \subsection{差分計測を用いた遅延予測方式}
 \label{diff}
@@ -206,8 +208,9 @@ t=1には接続Aにブロック番号0が到着し,続いて接続Aがにブロ�
 		\State {$D \leftarrow T - P - N $}
 		\EndIf
 	\end{algorithmic}
-	
 \end{algorithm}
+
+\newpage
 
 \section{初期遅延予測}
 \label{shoki}
@@ -220,6 +223,8 @@ t=1には接続Aにブロック番号0が到着し,続いて接続Aがにブロ�
 \ref{chienyokyuhoshiki}節の遅延要求方式ではファイル情報を取得するために,事前にHTTPのHEADリクエストを相手サーバーに送信している.
 このHEADリクエストの応答時間を計測することで,各TCP接続間の性能差も推測できる.
 ただし,後続のGETリクエストの応答メッセージサイズはHEAD レスポンスのそれよりも大きく,実際には一つのHTTPレスポンスに対して複数のTCPセグメントがやり取りされるので,厳密な意味での応答時間ではなく単一のHEAD リクエスト-レスポンスの応答時間であることに注意が必要である.
+
+\newpage
 
 \subsection{アルゴリズム}
 \label{yosokuhouhou}
@@ -282,8 +287,8 @@ TCPのウィンドウサイズがネットワーク状況に応じて変化す�
 
 \section{テストベッドでの評価}
 \label{testbed}
-\ref{networkmodel}にネットワーク環境を示す.TCP接続A-TCP接続B間の性能差は3倍,TCP接続A-TCP接続C間の性能差は10倍である.
-\begin{figure}[h]
+\ref{networkmodel}にテストベッドのネットワーク環境を示す.TCP接続A-TCP接続B間の性能差は3倍,TCP接続A-TCP接続C間の性能差は10倍である.
+\begin{figure}[ht]
 	\label{networkmodel}
 	\begin{center}
 		\includegraphics[width=16cm]{figure/test_network.pdf}
@@ -310,36 +315,38 @@ TCPのウィンドウサイズがネットワーク状況に応じて変化す�
 			ブロックサイズ & \(10^6\) Byte\\ \hline
 			初期遅延予測係数 & 10 \\ \hline
 			重複再要求発行閾値 & 20 \\ \hline
+			試行回数 & 10 \\ \hline
 		\end{tabular}
 	\end{center}
 \end{table}
 
 \newpage
 
-\begin{figure}[h]
+図\ref{ibt}は遅延要求のアルゴリズムごとの初期バッファリング時間である.
+図\ref{nsb}は遅延要求のアルゴリズムごとの非有効ブロック数である.
+DIFFは差分計測を用いた遅延要求方式,NORMALは常時最若番を要求する方式(制御を何も行わない),STATICはTCP接続間の性能差を入力する固定遅延要求方式である.
+固定遅延方式は理論上ではほとんどブロックの到達順序逆転を抑制することができる.
+このテストベッドでは,差分計測を用いた遅延要求方式はネットワークの情報を入力することなく固定遅延方式
+
+\newpage
+
+\begin{figure}[ht]
 	\begin{center}
-		\includegraphics[width=15cm]{figure/InitialBufferingTime.pdf}
+		\includegraphics[width=12.125cm]{figure/InitialBufferingTime.pdf}
 		\caption{初期バッファリング時間}
 		\label{ibt}
 	\end{center}
 \end{figure}
-図\ref{ibt}は遅延要求のアルゴリズムごとの初期バッファリング時間である.
-DIFFは差分計測を用いた遅延要求方式,NORMALは常時最若番を要求する方式(制御を何も行わない),STATICはTCP接続間の性能差を入力する固定遅延要求方式である.
-図\ref{ibt}より差分計測を用いた遅延要求方式はTCP接続間の性能差を入力することなく固定遅延要求方式に近い性能を獲得できていると言える.
 
-\newpage
-
-\begin{figure}[h]
+\begin{figure}[ht]
 	\begin{center}
-		\includegraphics[width=15cm]{figure/NumberOfBlocksStayingInBuffer.pdf}
+		\includegraphics[width=12.125cm]{figure/NumberOfBlocksStayingInBuffer.pdf}
 		\caption{平均非有効ブロック数}
 		\label{nsb}
 	\end{center}
 \end{figure}
 
-図\ref{nsb}は遅延要求のアルゴリズムごとの非有効ブロック数である.
-DIFFは差分計測を用いた遅延要求方式,NORMALは常時最若番を要求する方式(制御を何も行わない),STATICはTCP接続間の性能差を入力する固定遅延要求方式である.
-図\ref{nsb}より差分計測を用いた遅延要求方式はTCP接続間の性能差を入力することなく固定遅延要求方式に近い性能を獲得できていると言える.
+
 
 \newpage
 
@@ -370,7 +377,7 @@ DIFFは差分計測を用いた遅延要求方式,NORMALは常時最若番を要
 
 \newpage
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \begin{center}
         \includegraphics[width=15cm]{figure/thp24h.pdf}
         \caption{各パブリックミラーの24時間の性能の変化}
@@ -382,7 +389,7 @@ DIFFは差分計測を用いた遅延要求方式,NORMALは常時最若番を要
 
 典型的な受信の様子についてのグラフを図\ref{tpdnpub}および図\ref{tpddpub}に示す.
 
-\begin{figure}[h]
+\begin{figure}[ht]
 	\begin{center}
 		\includegraphics[width=11.9cm]{figure/TypicalPlotDelay=NORMALInit=FalseDup=IBRC.pdf}
 		\caption{遅延要求なしの場合の受信の様子}
@@ -390,7 +397,7 @@ DIFFは差分計測を用いた遅延要求方式,NORMALは常時最若番を要
 	\end{center}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[ht]
 	\begin{center}
 		\includegraphics[width=11.9cm]{figure/TypicalPlotDelay=DIFFInit=TrueDup=IBRC.pdf}
 		\caption{差分計測を用いた遅延要求をおこなった場合の受信の様子}
@@ -400,19 +407,17 @@ DIFFは差分計測を用いた遅延要求方式,NORMALは常時最若番を要
 
 \newpage
 
-\begin{figure}[h]
+\begin{figure}[ht]
 	\begin{center}
-		\includegraphics[width=15cm]{figure/InitialBufferingTimePub.pdf}
+		\includegraphics[width=12.125cm]{figure/InitialBufferingTimePub.pdf}
 		\caption{初期バッファリング時間}
 		\label{ibtpub}
 	\end{center}
 \end{figure}
 
-\newpage
-
-\begin{figure}[h]
+\begin{figure}[ht]
 	\begin{center}
-		\includegraphics[width=15cm]{figure/NumberOfBlocksStayingInBufferPub.pdf}
+		\includegraphics[width=12.125cm]{figure/NumberOfBlocksStayingInBufferPub.pdf}
 		\caption{平均非有効ブロック数}
 		\label{nsbpub}
 	\end{center}
