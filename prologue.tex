@@ -32,14 +32,16 @@
 {\Large TCP並列接続を用いたプログレッシブダウンロード\\における順序制御方式の実装}\\
 \vspace{0.1cm}
 {\large Implementation of sequence control method in progressive download \\
-	using TCP parallel connection}\\
+	using parallel TCP connection}\\
 \vspace{0.2cm}
 {\large 1420180  平城 光雄 Mitsuo Heijo}\\
 {\large 指導教員\ \  舟阪 淳一}\\
 \end{center}
 ]
 \section{はじめに}
-
+近年,ネットワークインフラの整備とおよび動画像高画質化が進んでおり,Webコンテンツの大容量化が顕著である.
+効率的なコンテンツの配信方法としてCDNを利用したコンテンツ分散配置やDNSのキャッシュサーバ単位で異なるIPアドレスを返すことによる広域負荷分散などがすでに運用されている.
+このように同一のコンテンツが様々な場所に配置されていることを利用して複数のWebサーバーと同時並行的に多重通信を行うことで,より高速で快適な通信を実現しようとする技術が様々な場所で開発および提案されている.
 
 \section{提案手法}
 
