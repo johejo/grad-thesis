@@ -40,12 +40,26 @@ Hiroshima City University}
 %
 %
 \jabst{ % 和文梗概 
-\hspace*{0.5em}概要
+\hspace*{0.5em}
+近年,ネットワークインフラの整備とおよび動画像高画質化が進んでおり,Webコンテンツの大容量化が顕著である.
+効率的なコンテンツの配信方法としてCDNを利用したコンテンツ分散配置やDNSのキャッシュサーバ単位で異なるIPアドレスを返すことによる広域負荷分散などがすでに運用されている.
+このように同一のコンテンツが様々な場所に配置されていることを利用して複数のWebサーバーと同時並行的に多重通信を行うことで,より高速で快適な通信を実現しようとする技術が様々な場所で開発および提案されている.
+本研究では,性能の異なる複数のTCP接続を利用して同一のファイルを取得しながら利用する場合における既知の問題に対処するために,各TCP接続間の性能を比較しながら到着順序逆転の発生を抑制することを目的としたリクエスト送信時における能動的なHTTPプログレッシブダウンロード順序制御方式を提案する.
+そしてこの提案手法を実装し,テストベッドおよびパブリックネットワーク上で評価した.
+テストベッドでの評価では,差分要求方式はTCP接続間の性能差を入力することなく固定遅延要求方式と同等の性能を獲得することができた.
+また,パブリックネットワークでの評価では差分計測を用いた遅延予測方式は初期遅延予測方式と組み合わせることで制御なしの場合と比べて,50\%の初期バッファリング時間の削減,30\%の非有効ブロック数の削減と50\%の平均遅延時間の削減が確認できた.
 } %
 
 \eabst{ % 英文梗概
-\hspace*{1em}gaiyo}
-
+\hspace*{1em}
+In recent years, the development of network infrastructure and the improvement of the quality of moving images have been advanced, and the increase in the capacity of Web contents is remarkable.
+Distributed content distribution using CDN as an efficient content distribution method and wide area load distribution by returning different IP addresses in cache server units of DNS are already in operation.
+In this way, by utilizing the fact that the same contents are arranged in various places, simultaneous concurrent multiplexing communication with a plurality of web servers is carried out, so that various technologies to realize higher speed and comfortable communication vary Have been developed and proposed in places.
+In this research, in order to deal with the known problem when utilizing the same file while acquiring the same file by using plural TCP connections with different performances, while comparing the performance between each TCP connection, occurrence of inversion order inversion We propose an active HTTP progressive download order control method at request transmission aimed at suppressing download progress.
+We implemented this proposed method and evaluated it on test bed and public network.
+In the test bed evaluation, the difference request method was able to acquire the same performance as the fixed delay request method without inputting the performance difference between the TCP connections.
+In addition, in the evaluation on the public network, the delay prediction method using the difference measurement is combined with the initial delay prediction method to reduce the initial buffering time by 50\%, the ineffectiveness of 30\% We were able to confirm the reduction of the number of blocks and the reduction of the average delay time by 50\%.
+}
 \begin{document} 
 \maketitle %とびらの出力
 
@@ -90,13 +104,17 @@ mHTTPクライアントの構造について図\ref{mhttp}に示す.
 
 \newpage
 
+また,複数のTCP接続を使用して,複数のサーバーから同一のファイルを取得し,クライアントに対して単一のバイトストリームとして応答を返すHTTPプロキシの提案が既になされている.\cite{proxy}
+この研究では遅延しているブロックに対する冗長的な重複再要求を行うことで,バッファの使用量の削減とスムーズなダウンロードを実現しながらも,冗長な要求によるダウンロード時間の増加を抑える試みが提案されている.
+
+
 \section{プログレッシブダウンロード方式}
 ネットワークの大容量化,高速化に伴い,Youtube\cite{youtube}やNetflix\cite{netflix}などの動画配信サービスの利用が増加している.
 動画配信サービスにはUDP上に独自のアプリケーションプロトコルをサーバーおよびクライントに実装し利て配信するプッシュベースの方式と,TCP上でHTTPを用いて利用するプルベースの方式などがある.
 中でもアプリケーションプロトコルとしてHTTPを用いるプルベース方式は,エンドユーザーは特別なソフトウェアの準備等をする必要はなく,基本的にはブラウザさえあれば利用可であり,またアプリケーションプロトコルがHTTPであることからサービスの提供者もAkamaiやFastlyに代表されるCDN(Contents Delivery Network)のサービスを利用することで効率の良い配信が可能であるため,近年急速に広がっている.
-HTTPを利用したストリーミング方式としてはHLSやMPEG-DASHがある.
+HTTPを利用したストリーミング方式としてはHLS(HTTP LiveStreaming)\cite{hls}やMPEG-DASH(MPEG-Dynamic Adaptive Streaming over HTTP)\cite{dash}がある.
 プログレッシブダウンロードとは,こうしたプルベース方式の中でも基本的なファイルのダウンロードを応用することでファイルを部分的にダウンロードしながらダウンロードの完了した部分からブラウザのレンダリングや動画再生等に利用する方式である.\\
-\ \ \ \ プログレッシブダウンロードでは基本的にはダウンロード済みのデータはキャッシュとして再利用可能であるので,著作権など再利用に制限を加えたい場合や生放送形式での動画配信についてはHLS(HTTP LiveStreaming)\cite{hls}やMPEG-DASH(MPEG-Dynamic Adaptive Streaming over HTTP)\cite{dash}をベースとしてフロントエンドおよびサーバーサイドでの実装が必要である.
+\ \ \ \ プログレッシブダウンロードでは基本的にはダウンロード済みのデータはキャッシュとして再利用可能であるので,著作権など再利用に制限を加えたい場合や生放送形式での動画配信についてはをHLSやMPEG-DASHベースとしてフロントエンドおよびサーバーサイドでの実装が必要である.
 プログレッシブダウンロードの動作概要は,まず,1つのファイルを複数のあるサイズのブロックに分割する.
 次に,クライアントは分割されたブロックをサーバーに対してリクエストする.
 サーバーはリクエストに応じたブロックを送信する.
@@ -123,6 +141,7 @@ HTTPを利用したストリーミング方式としてはHLSやMPEG-DASHがあ�
 複数のブロックを性能の異なる別々のTCP接続に対して要求を行う場合,ブロックの再生順番と受信完了順序が一致しない可能性がある.
 図\ref{block}が示すように,先頭から連続するブロック1及びブロック2は再生可能である(有効ブロック)が,それ以外のブロック3及びブロック5は未受信のブロックを間に挟んでいるため再生することはできない(非有効ブロック).
 複数のTCP接続を束ねることでグッドプットを向上させても,受信ブロックが有効ブロックでない限りは応答性は低下してしまい,動画の再生が停止するなどしてユーザー体験は悪化することが予想できる.
+また,バッファ使用量の観点から見ても多数の非有効ブロックをメモリ上に保持し続けるのは,好ましくないと言える.
  
 \begin{figure}[ht]
 	\centering
@@ -134,7 +153,7 @@ HTTPを利用したストリーミング方式としてはHLSやMPEG-DASHがあ�
  %%%%%%%%%%%%%
  \section{重複再要求}
  \label{juhuku}
- \ref{hukusu}節で述べた性能差のある複数のTCP接続を用いたプログレッシブダウンロードにおいて起こりうる問題点を,アプリケーション層での制御で解消するために提案されている方式として,重複再要求がある.
+ \ref{hukusu}節で述べた性能差のある複数のTCP接続を用いたプログレッシブダウンロードにおいて起こりうる問題点を,アプリケーション層での制御で解消するための重複再要求方式が関連研究\cite{proxy}において提案されている.
  この方式では未取得ブロックより後に合計N個以上(有効・非有効は問わない)のブロックがあれば,未取得ブロックをその未取得ブロックを要求したTCP接続とは別のTCP接続へ再要求を行う.
  図\ref{blockdup}にその模式図を示す.
  図\ref{blockdup}の例では重複再要求を行い,ブロック2を取得することで少なくともでもブロック3が非有効ブロックである状態を解消することができる.
@@ -506,7 +525,7 @@ DIFFは差分計測を用いた遅延要求方式,NORMALは常時最若番を要
 提案方式は,各TCP接続におけるブロックの到着間隔を計測することでそのTCP接続に遅延要求を行うことで到着順序の逆転を抑制する方式である.
 次に実装したプログラムをテストベッドおよびネットワーク環境が未知の公開ネットワーク上で動作させて評価を行った.
 テストベッドでの評価では,差分要求方式はTCP接続間の性能差を入力することなく固定遅延要求方式と同等の性能を獲得することができた.
-続いてパブリックネットワークでの評価では差分計測を用いた遅延予測方式は初期遅延予測方式と組み合わせることで制御なしの場合と比べて,50\%の初期バッファリング時間の削減と30\%の非有効ブロック数の削減が確認できた.
+また,パブリックネットワークでの評価では差分計測を用いた遅延予測方式は初期遅延予測方式と組み合わせることで制御なしの場合と比べて,50\%の初期バッファリング時間の削減,30\%の非有効ブロック数の削減と50\%の平均遅延時間の削減が確認できた.
 
 
 \section{今後の課題}
@@ -514,7 +533,7 @@ DIFFは差分計測を用いた遅延要求方式,NORMALは常時最若番を要
 \begin{itemize}
     \item 実際のユーザー体験を考慮した評価
     \item タイマ駆動要求方式の実装との比較
-    \item マルチスレッド実装の最適化もしくはノンブロッキングIOを使用した実装による高速化
+    \item ノンブロッキングI/Oを使用した実装の最適化
 \end{itemize}
 
 \clearpage
