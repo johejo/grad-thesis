@@ -1,0 +1,10 @@
+service:
+    - docker
+
+before_install:
+    - docker pull paperist/alpine-texlive-ja
+    - docker run --rm -it -v $PWD:/workdir paperist/alpine-texlive-ja
+
+script:
+    - make clean
+    - make all
