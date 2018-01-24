@@ -8,7 +8,6 @@ addons:
             - texlive-latex-extra
             - texlive-bibtex-extra
             - texlive-binaries
-            - texlive-fonts-extra
             - texlive-font-utils
             - texlive-publishers
             - texlive-formats-extra
