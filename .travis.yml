@@ -5,7 +5,7 @@ addons:
             - texlive
             - texlive-lang-cjk
             - texlive-science
-            - tex-live-extra
+            - texlive-extra
 
 script:
     - make clean
