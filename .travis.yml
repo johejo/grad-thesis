@@ -5,7 +5,16 @@ addons:
             - texlive
             - texlive-lang-cjk
             - texlive-science
-            - texlive-extra
+            - texlive-latex-extra
+            - texlive-bibtex-extra
+            - texlive-binaries
+            - texlive-fonts-extra
+            - texlive-font-utils
+            - texlive-publishers
+            - texlive-formats-extra
+            - texlive-humanities
+            - texlive-pictures
+            - texlive-pstricks
 
 script:
     - make clean
