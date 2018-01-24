@@ -18,5 +18,4 @@ script:
     - make all
 
 deploy:
-    - curl -T POST \
-        -H "Authorization: Bearer $DROPBOX_TOKEN" -T prologue.pdf https://content.dropboxapi.com/1/files_put/auto/prologue.pdf
+    - curl -X POST -H "Authorization: Bearer $DROPBOX_TOKEN" -T prologue.pdf https://content.dropboxapi.com/1/files_put/auto/prologue.pdf
