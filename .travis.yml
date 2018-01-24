@@ -4,8 +4,11 @@ addons:
             - curl
             - texlive
             - texlive-lang-cjk
+            - texlive-science
 
 script:
+    - wget http://mirror.hmc.edu/ctan/macros/latex/contrib/algorithmicx/algpseudocode.sty
+    - mv algpseudocode.sty
     - make clean
     - make all
     - curl -X POST -H "Authorization: Bearer $DROPBOX_TOKEN" -T prologue.pdf https://content.dropboxapi.com/1/files_put/auto/prologue.pdf
