@@ -9,5 +9,5 @@ before_install:
     - docker run --name latex -itd -v $PWD:/workdir johejo/debian-latex-jp:latest
 
 script:
-    - docker exec bash -c "make clean"
-    - docker exec bash -c "make all"
+    - docker exec latex bash -c "make clean"
+    - docker exec latex bash -c "make all"
