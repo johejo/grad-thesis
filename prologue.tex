@@ -4,7 +4,7 @@
 \documentclass{ltjsarticle}
 \else
 \ifupTeX
-\documentclass[uplatex,dvipdfmx]{jsarticle}
+\documentclass[uplatex,dvipdfmx]{ujsarticle}
 \else
 \documentclass[dvipdfmx]{jsarticle}
 \fi
@@ -22,7 +22,7 @@
 \setlength{\evensidemargin}{-5.4mm}
 \setlength{\headheight}{0mm}
 \setlength{\footskip}{10mm}
-\renewcommand{\baselinestretch}{1.0}
+\renewcommand{\baselinestretch}{0.79}
 \renewcommand{\textfraction}{0}\renewcommand{\floatpagefraction}{1}
 \renewcommand{\topfraction}{1} \renewcommand{\bottomfraction}{1}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -38,48 +38,90 @@
 {\large 指導教員\ \  舟阪 淳一}\\
 \end{center}
 ]
+\vspace{-5mm}
 \section{はじめに}
-近年,Webコンテンツの大容量化が顕著である.
-効率的なコンテンツの配信方法としてCDNを利用したコンテンツ分散配置などがすでに運用されている.
-このように同一のコンテンツが様々な場所に配置されていることを利用して複数のWebサーバーと同時並行的に通信を行うことで,より高速で通信を実現しようとする方法が提案されている.
-本研究では,性能の異なる複数のTCP接続を利用して同一のファイルを分割取得する場合を想定し,リクエスト送信時に,各TCP接続間の性能を比較し到着順序逆転の発生を抑制する能動的な順序制御方式を提案し,HTTPクライアントとして実装し評価する.
+\vspace{-2mm}
+近年,効率的なコンテンツ配信を目的としたコンテンツの分散配置などがすでに運用されている.
+このような同一のファイルが様々な場所に配置されている状況を利用して複数のサーバーと同時に通信を行うことで,より高速な通信を実現する方式が提案されている.\cite{mhttp}
+また既存の提案ではプロキシにおけるバッファの観点でしか順序制御が考えられておらず、プログレッシブダウンロードにおけるフリーズのない動画再生等を考慮した順序制御は目的とされていない。
+本研究では,性能の異なる複数のTCP接続を利用して同一のファイルを分割取得する場合を想定し,リクエスト送信時に各TCP接続間の性能を比較することで到着順序逆転の発生を抑制する順序制御方式を提案する.
+\vspace{-5mm}
 
-\section{提案手法}
-確立したTCP接続群の中で性能の最も高いTCP接続には,最も若番のブロックを要求する.
-性能の低いTCP接続では前回のブロック要求の送信からブロックの到着までの間隔を算出し,
-その算出値に基づいて後ろのブロックを遅延要求する.
-図\ref{delay}にその模式図を示す.
+\section{関連研究}
+\vspace{-2mm}
+既存研究では,複数のサーバを利用してファイルを分割して並列ダウンロードし,順序通りにクライアントに提供する代理サーバーが提案されている.\cite{proxy}
+既存の提案である重複再要求方式では,非有効ブロックの個数がある閾値を超えた場合は別の接続に要求を再送信することで事後的に順序逆転に対処していた.
+この提案では,要求送信時における予防的な順序逆転への対策は行われていない.
+また,動画等の再生を考慮した評価も行われていない.
+\vspace{-5mm}
 
-\begin{figure}[ht]
+\section{提案方式}
+\vspace{-2mm}
+確立したTCP接続群の中で最高性能の接続には,最若番のブロックを要求する.
+性能の低い接続には前回の要求の送信からブロックの到着までのブロック送受信回数の差分\begin{math}D\end{math}を計測し,
+\begin{math}D\end{math}に基づいて最若番でないブロックを要求する.
+\begin{math}D\end{math}は式(1)から求める.
+\begin{math}T\end{math}はその時点でのブロックの総受信回数,
+\begin{math}P\end{math}はその接続の前回の受信完了時におけるブロックの総受信回数,
+\begin{math}N\end{math}は接続の個数である.
+図\ref{delay}に模式図を示す.
+\label{eq}
+\begin{equation}
+	D = T - P - N
+\end{equation}
+\vspace{-10mm}
+\begin{figure}[h]
 	\centering
 	\includegraphics[width=8cm]{figure/delay.pdf}
 	\caption{遅延要求の模式図}
 	\label{delay}
 \end{figure}
+\vspace{-10mm}
 
-\section{評価}
-パブリックネットワークでの評価にあたり,Ubuntuのリリースイメージファイルの配布に用いられているパブリックミラー\cite{ubuntu}を利用した.
-複数のミラーから同一のイメージファイルを分割して取得する際の順序逆転の影響を評価する.
-
-\begin{figure}[ht]
+\section{実験と評価}
+\vspace{-2mm}
+実装したプログラムでテストベッドと公開ネットワークで評価を行なった.
+本稿では紙面の都合上,公開ネットワークでの結果のみを掲載する.
+公開ネットワークでの実験には利用のしやすさからUbuntuのイメージファイルのパブリックミラーを使用した.
+サーバーは9つ使用し,2つは国内での残りの7つは国外のものを使用した.
+国内のサーバーと国外のサーバーの性能差はおよそ5~10倍程度である.
+また,事前の調査より15時から18時の間で帯域の変化が大きいことが判明しているので,
+その時間帯に754Mbyteのファイルを各方式10回試行し,平均値を比較した.
+評価対象は,先行研究で提案されている重複再要求のみを実装したもの(NORMAL)と,重複再要求に加えて提案方式である差分計測を用いた遅延要求方式を実装したもの(DIFF)の2種類である.
+評価項目は,ブロックの理想的な到達時刻からの遅れを表す遅延時間の最大値である初期バッファリング時間,
+バッファ内の非有効ブロックの数,ブロックの理想的な到達時刻からの正の遅れの平均である平均遅延時間をであるが,
+本稿では,動画再生を想定しているため,ダウンロード全体でのブロックの到着順序逆転の度合いについて表していると言えるバッファ内の非有効ブロック数を図\ref{nsbpub}に示す.
+\vspace{-4mm}
+\begin{figure}[h]
 	\centering
-	\includegraphics[width=7cm]{figure/nsb-g.pdf}
+	\includegraphics[width=9cm]{figure/nsb-g.pdf}
 	\caption{平均非有効ブロック数}
 	\label{nsbpub}
 \end{figure}
-先行研究で有効性が示されている重複再要求のみを有効とした
+\vspace{-5mm}
 
+図\ref{nsbpub}より,公開ネットワークでの評価おいて差分計測を用いた遅延予測方式は重複再要求のみの場合と比較して,
+約30\%の非有効ブロック数の削減が確認できる.
+\vspace{-5mm}
 \section{まとめ}
-パブリックネットワークでの評価では差分計測を用いた遅延予測方式は初期遅延予測方式と組み合わせることで制御なしの場合と比べて,50\%の初期バッファリング時間の削減,30\%の非有効ブロック数の削減と50\%の平均遅延時間の削減が確認できた.
-
+複数のサーバーから同一のファイルを並列に分割ダウンロードする際の順序逆転の発生を抑制する要求方式を提案し,
+実装したHTTPクライアントでテストベッドと公開ネットワークで評価を行い優位性を確認した.
+今後の課題としては,プロキシとして組み込んだシステムでの実際の動画の視聴体験まで含めた評価などが考えられる.
+\vspace{-5mm}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 参考文献
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\small
 \begin{thebibliography}{2}
+
+\bibitem{mhttp}
+\small{
+Juhoon Kim, Yung-Chih Chen, Ramin Khalili, Don Towsley, Anja Feldmann,
+"Multi-source Multipath HTTP (mHTTP): A Proposal,"
+ACM SIGMETRICS Performance Evaluation Review, vol. 42, No. 1, pp.583--584, 2014.
 \bibitem{proxy}
-Junichi Funasaka, Atsushi Kawano, and Kenji Ishida: Adaptive Parallel Downloading Method for Proxy Systems, IEICE Trans., Vol.E90-B, No.4, pp.720-727, Apr. 2007.
-\bibitem{ubuntu}
-Official CD Mirrors for Ubuntu available at., https://launchpad.net/ubuntu/+cdmirrors, 2018.
+\small
+Junichi Funasaka, Atsushi Kawano, and Kenji Ishida: Adaptive Parallel Downloading Method for Proxy Systems, IEICE Trans., Vol.E90-B, No.4, pp.720-727, Apr. 2007.}
 \end{thebibliography}
 
 \end{document}
