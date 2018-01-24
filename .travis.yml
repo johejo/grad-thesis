@@ -6,9 +6,8 @@ addons:
             - curl
 
 before_install:
-    - docker run --rm -it -v $PWD:/workdir paperist/alpine-texlive-ja
-
+    - docker run --name latex -itd -v $PWD:/workdir johejo/debian-latex-jp:latest
 
 script:
-    - make clean
-    - make all
+    - docker exec bash -c "make clean"
+    - docker exec bash -c "make all"
