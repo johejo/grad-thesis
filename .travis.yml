@@ -5,7 +5,7 @@ addons:
     apt:
         packages:
             - curl
-            - texlive-full
+            - texlive-lang-japanese
 
 
 # before_install:
@@ -16,6 +16,4 @@ addons:
 script:
     - make clean
     - make all
-
-deploy:
     - curl -X POST -H "Authorization: Bearer $DROPBOX_TOKEN" -T prologue.pdf https://content.dropboxapi.com/1/files_put/auto/prologue.pdf
