@@ -1,9 +1,17 @@
-service:
-    - docker
+# service:
+#     - docker
 
-before_install:
-    - docker pull paperist/alpine-texlive-ja
-    - docker run --rm -it -v $PWD:/workdir paperist/alpine-texlive-ja
+addons:
+    apt:
+        packages:
+            - texlive
+            - texlive-lang-japanese
+
+
+# before_install:
+    # - docker pull paperist/alpine-texlive-ja
+    # - docker run --rm -itd -v $PWD:/workdir paperist/alpine-texlive-ja
+
 
 script:
     - make clean
