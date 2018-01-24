@@ -61,32 +61,13 @@
 パブリックネットワークでの評価にあたり,Ubuntuのリリースイメージファイルの配布に用いられているパブリックミラー\cite{ubuntu}を利用した.
 複数のミラーから同一のイメージファイルを分割して取得する際の順序逆転の影響を評価する.
 
-\begin{table}[htbp]
-	\begin{center}
-		\caption{使用したパブリックミラー一覧}
-		\label{tablemirror}
-		\scalebox{0.7}[0.7]{
-		\begin{tabular}{|l|l|l|} \hline
-			ホスト & 組織 & 国\\ \hline \hline
-			ftp.jaist.ac.jp & JAIST & JP \\
-			ubuntutym2.u-toyama.ac.jp & Univercity of Toyama & JP \\
-			releases.ubuntu.com & Canonical & GB \\
-			mirrorservice.org & University of Kent & GB \\
-			ubuntu.ipacct.com & IPACCT & BG \\
-			mirror.pop-sc.rnp.br & PoP-SC & BR \\
-			ftp.belnet.be & Belnet & BE \\
-			mirrors.mit.edu & MIT & US \\
-			mirror.yandex.ru & Yandex & RU \\ \hline
-		\end{tabular}}
-	\end{center}
-\end{table}
-
 \begin{figure}[ht]
 	\centering
 	\includegraphics[width=7cm]{figure/nsb-g.pdf}
 	\caption{平均非有効ブロック数}
 	\label{nsbpub}
 \end{figure}
+先行研究で有効性が示されている重複再要求のみを有効とした
 
 \section{まとめ}
 パブリックネットワークでの評価では差分計測を用いた遅延予測方式は初期遅延予測方式と組み合わせることで制御なしの場合と比べて,50\%の初期バッファリング時間の削減,30\%の非有効ブロック数の削減と50\%の平均遅延時間の削減が確認できた.

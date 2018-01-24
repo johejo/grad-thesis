@@ -1,21 +1,14 @@
+service: docker
+
 addons:
     apt:
         packages:
             - curl
-            - texlive
-            - texlive-lang-cjk
-            - texlive-science
-            - texlive-latex-extra
-            - texlive-bibtex-extra
-            - texlive-binaries
-            - texlive-font-utils
-            - texlive-publishers
-            - texlive-formats-extra
-            - texlive-humanities
-            - texlive-pictures
-            - texlive-pstricks
+
+before_install:
+    - docker run --rm -it -v $PWD:/workdir paperist/alpine-texlive-ja
+
 
 script:
     - make clean
     - make all
-    - curl -X POST -H "Authorization: Bearer $DROPBOX_TOKEN" -T prologue.pdf https://content.dropboxapi.com/1/files_put/auto/prologue.pdf
