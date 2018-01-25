@@ -22,7 +22,7 @@
 \setlength{\evensidemargin}{-5.4mm}
 \setlength{\headheight}{0mm}
 \setlength{\footskip}{10mm}
-\renewcommand{\baselinestretch}{0.79}
+\renewcommand{\baselinestretch}{0}
 \renewcommand{\textfraction}{0}\renewcommand{\floatpagefraction}{1}
 \renewcommand{\topfraction}{1} \renewcommand{\bottomfraction}{1}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -30,22 +30,23 @@
 \twocolumn[
 \begin{center}
 {\Large TCP並列接続を用いたプログレッシブダウンロード\\における順序制御方式の実装}\\
-\vspace{0.75mm}
+\vspace{1mm}
 {\large Implementation of Sequence Control Method in Progressive Download \\
 	Using Parallel TCP Connections}\\
-\vspace{0.75mm}
+\vspace{1mm}
 {\large 1420180  平城 光雄 Mitsuo Heijo}\\
 {\large 指導教員\ \  舟阪 淳一}\\
 \end{center}
-\vspace{-2mm}
+\vspace{-3mm}
 ]
+\fontsize{9.7pt}{0pt}\selectfont
 \section{はじめに}
 \vspace{-3mm}
 近年,効率的なコンテンツ配信を目的としたCDN等でのコンテンツの分散配置などが既に運用されている.
 このような同一のファイルが分散配置されている状況を利用して複数のサーバと同時に通信を行うことで,より高速なファイルの取得を実現する方式が提案されている\cite{mhttp}\cite{proxy}.
 しかし,既存の提案ではプログレッシブダウンロードにおける動画再生等を考慮した順序制御は目的とされていない.
 本研究では,性能差のある複数のTCP接続を利用して異なるサーバから同一のファイルを分割取得する場合を想定し,要求送信時に各接続間の性能を比較することで到着順序逆転を抑制する順序制御方式を提案する.
-\vspace{-9mm}
+\vspace{-8mm}
 
 \section{関連研究}
 \vspace{-3mm}
@@ -53,7 +54,7 @@
 既存の提案である重複再要求方式では,非有効ブロックの個数がある閾値を超えた場合は別の接続に要求を再送信することで事後的に順序逆転に対処していた.
 この提案では,要求送信時における予防的な順序逆転への対策は行われていない.
 また,動画等の再生を考慮した評価も行われていない.
-\vspace{-9mm}
+\vspace{-8mm}
 
 \section{提案方式}
 \vspace{-3mm}
@@ -73,20 +74,20 @@
 \begin{math}T=3, P[B]=0, N=2\end{math}であるので
 接続Bに\begin{math}D=2\end{math}としてブロック要求を送信することで,
 ブロック3-5が順序通りに到着している様子を示している.
-\vspace{-4.5mm}
+\vspace{-3.5mm}
 \begin{equation}
 	\label{eq}
-	D = T - P[X] - N - 1
+	D = T - P[X] - N + 1
 \end{equation}
-\vspace{-11mm}
+\vspace{-8mm}
 \begin{figure}[h]
 	\centering
 	\includegraphics[width=7.6cm]{figure/delay.pdf}
-	\vspace{-5mm}
+	\vspace{-4mm}
 	\caption{遅延要求の模式図}
 	\label{delay}
 \end{figure}
-\vspace{-13.75mm}
+\vspace{-12mm}
 
 \section{実験と評価}
 \vspace{-3mm}
@@ -97,6 +98,15 @@
 図\ref{mirror}に事前に調査したミラーサーバにおける帯域性能の24時間変化を示す.
 図\ref{mirror}より国内のサーバと国外のサーバの帯域性能差はおよそ6から46倍程度である.
 各方式10回ずつファイル取得を行い,平均値を比較する.
+\vspace{0mm}
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=8cm]{figure/thp24h-g.pdf}
+	\vspace{-4.25mm}
+	\caption{ミラーサーバにおける帯域性能の24時間変化}
+	\vspace{-6.5mm}
+	\label{mirror}
+\end{figure}
 また,取得するファイルは,映像と音声合わせてビットレートが40Mbpsで長さが150秒の動画の取得を仮定し,754MByteのイメージファイルを選択した.
 評価対象は,先行研究で提案されている重複再要求のみを実装したもの(NORMAL)と,重複再要求に加えて提案方式である差分計測を用いた遅延要求方式を実装したもの(DIFF)の2種類である.
 評価項目は,初期バッファリング時間,バッファ内の非有効ブロックの数,平均遅延時間である.
@@ -108,13 +118,13 @@
 よって,これらの値が小さいほど,複数のTCP接続を確立し得られた合計帯域をより有効に利用できているといえる.
 実験結果を表\ref{hyoka}に示す.
 値は平均値,標準偏差の組で表す.
-\vspace{-8mm}
+10回試行の各ブロックIDにおける非有効ブロック数をプロットしたものを図\ref{testnsb}に示す.
+\vspace{-8.25mm}
 \begin{table}[htb]
 	\begin{center}
 		\caption{実験結果}
 		\label{hyoka}
-		\vspace{-3.5mm}
-		\scalebox{0.64}{
+		\scalebox{0.65}{
 		\begin{tabular}{|c|c|c|c|} \hline
 			方式 & 初期バッファリング時間[s] & 平均非有効ブロック数 & 平均遅延時間[s]\\ \hline \hline
 			NORMAL & 6.203, 0.717 & 6.435, 0.657 & 1.550, 0.322 \\ \hline
@@ -126,33 +136,33 @@
 \vspace{-11mm}
 \begin{figure}[h]
 	\centering
-	\includegraphics[width=8cm]{figure/thp24h-g.pdf}
-	\vspace{-5.5mm}
-	\caption{ミラーサーバにおける帯域性能の24時間変化}
-	\label{mirror}
+	\includegraphics[width=7.5cm]{figure/testNSB.pdf}
+	\vspace{-4.5mm}
+	\caption{非有効ブロック数}
+	\label{testnsb}
 \end{figure}
 \vspace{-4.5mm}
 
-\hspace{-3.5mm}表\ref{hyoka}より,公開ネットワークでの評価おいて差分計測を用いた遅延予測方式は重複再要求のみの場合と比較して,
+\hspace{-3.5mm}表\ref{hyoka}より,公開ネットワークでの評価おいて提案方式は重複再要求のみの場合と比較して,
 約50\%の初期バッファリング時間の短縮,約30\%の非有効ブロック数の削減,約30\%の平均遅延時間の短縮できたことが確認できる.
-\vspace{-9mm}
+\vspace{-8mm}
 \section{まとめ}
 \vspace{-3mm}
 複数のサーバから同一のファイルを並列に分割ダウンロードする際の順序逆転の発生を抑制する要求方式を提案し,
 実装したHTTPクライアントをテストベッドと公開ネットワークで評価し優位性を確認した.
 今後の課題としては,プロキシとして組み込んだシステムでの実際の動画の視聴体験まで含めた評価などが考えられる.
-\vspace{-8.5mm}
+\vspace{-7.75mm}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 参考文献
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \fontsize{6pt}{0pt}\selectfont{
 \begin{thebibliography}{9}
-\vspace{-2.5mm}
+\vspace{-3mm}
 \bibitem{mhttp}
 Juhoon Kim, Yung-Chih Chen, Ramin Khalili, Don Towsley, Anja Feldmann,
 "Multi-source Multipath HTTP (mHTTP): A Proposal,"
 ACM SIGMETRICS Performance Evaluation Review, vol.42, no.1, pp.583-584, 2014.
-\vspace{-2.5mm}
+\vspace{-2.75mm}
 \bibitem{proxy}
 Junichi Funasaka, Atsushi Kawano, and Kenji Ishida: Adaptive Parallel Downloading Method for Proxy Systems, IEICE Trans., Vol.E90-B, no.4, pp.720-727, 2007.
 \end{thebibliography}}
