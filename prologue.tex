@@ -39,7 +39,7 @@
 \end{center}
 \vspace{-3mm}
 ]
-\fontsize{9.7pt}{0pt}\selectfont
+\fontsize{9.6pt}{0pt}\selectfont
 \section{はじめに}
 \vspace{-3mm}
 近年,効率的なコンテンツ配信を目的としたCDN等でのコンテンツの分散配置などが既に運用されている.
@@ -95,18 +95,8 @@
 本稿では紙面の都合上,公開ネットワークでの結果のみを掲載する.
 公開ネットワークでの実験には利用のしやすさからUbuntuのイメージファイルのパブリックミラーを利用した.
 サーバは国内2つ,国外7つの合計9つ利用した.
-図\ref{mirror}に事前に調査したミラーサーバにおける帯域性能の24時間変化を示す.
-図\ref{mirror}より国内のサーバと国外のサーバの帯域性能差はおよそ6から46倍程度である.
+事前に調査したミラーサーバにおける帯域性能の調査より,国内のサーバと国外のサーバの帯域性能差はおよそ6から46倍程度であることがわかっている.
 各方式10回ずつファイル取得を行い,平均値を比較する.
-\vspace{0mm}
-\begin{figure}[h]
-	\centering
-	\includegraphics[width=8cm]{figure/thp24h-g.pdf}
-	\vspace{-4.25mm}
-	\caption{ミラーサーバにおける帯域性能の24時間変化}
-	\vspace{-6.5mm}
-	\label{mirror}
-\end{figure}
 また,取得するファイルは,映像と音声合わせてビットレートが40Mbpsで長さが150秒の動画の取得を仮定し,754MByteのイメージファイルを選択した.
 評価対象は,先行研究で提案されている重複再要求のみを実装したもの(NORMAL)と,重複再要求に加えて提案方式である差分計測を用いた遅延要求方式を実装したもの(DIFF)の2種類である.
 評価項目は,初期バッファリング時間,バッファ内の非有効ブロックの数,平均遅延時間である.
@@ -115,14 +105,15 @@
 この時間が短くなれば再生開始時の待ち時間が短縮される.
 非有効ブロック数は取得したにもかかわらず,再生が不可能なブロックである.
 平均遅延時間は各ブロックが理想的な到着時刻からの正の遅延時間の平均値である.
-よって,これらの値が小さいほど,複数のTCP接続を確立し得られた合計帯域をより有効に利用できているといえる.
+これらの値が小さいほど,複数のTCP接続を確立し得られた合計帯域をより有効に利用できているといえる.
 実験結果を表\ref{hyoka}に示す.
 値は平均値,標準偏差の組で表す.
-10回試行の各ブロックIDにおける非有効ブロック数をプロットしたものを図\ref{testnsb}に示す.
-\vspace{-8.25mm}
+10回試行の各ブロックIDにおける非有効ブロック数と平均遅延時間をプロットしたものを図\ref{testnsb},\ref{testadt}に示す.
+\vspace{-8mm}
 \begin{table}[htb]
 	\begin{center}
 		\caption{実験結果}
+		\vspace{-0.5mm}
 		\label{hyoka}
 		\scalebox{0.65}{
 		\begin{tabular}{|c|c|c|c|} \hline
@@ -133,13 +124,23 @@
 		}
 	\end{center}
 \end{table}
-\vspace{-11mm}
+\vspace{-11.25mm}
 \begin{figure}[h]
 	\centering
-	\includegraphics[width=7.5cm]{figure/testNSB.pdf}
+	\includegraphics[width=8cm]{figure/testNSB.pdf}
 	\vspace{-4.5mm}
 	\caption{非有効ブロック数}
 	\label{testnsb}
+\end{figure}
+\vspace{-4.5mm}
+
+\vspace{-4mm}
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=8cm]{figure/testADT.pdf}
+	\vspace{-4.5mm}
+	\caption{平均遅延時間}
+	\label{testadt}
 \end{figure}
 \vspace{-4.5mm}
 
