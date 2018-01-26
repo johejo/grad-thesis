@@ -37,27 +37,27 @@
 {\large 1420180  平城 光雄 Mitsuo Heijo}\\
 {\large 指導教員\ \  舟阪 淳一}\\
 \end{center}
-\vspace{-3mm}
+\vspace{-2.75mm}
 ]
 \fontsize{9.6pt}{0pt}\selectfont
 \section{はじめに}
-\vspace{-3mm}
+\vspace{-2.75mm}
 近年,効率的なコンテンツ配信を目的としたCDN等でのコンテンツの分散配置などが既に運用されている.
 このような同一のファイルが分散配置されている状況を利用して複数のサーバと同時に通信を行うことで,より高速なファイルの取得を実現する方式が提案されている\cite{mhttp}\cite{proxy}.
 しかし,既存の提案ではプログレッシブダウンロードにおける動画再生等を考慮した順序制御は目的とされていない.
 本研究では,性能差のある複数のTCP接続を利用して異なるサーバから同一のファイルを分割取得する場合を想定し,要求送信時に各接続間の性能を比較することで到着順序逆転を抑制する順序制御方式を提案する.
-\vspace{-8mm}
+\vspace{-7.75mm}
 
 \section{関連研究}
-\vspace{-3mm}
+\vspace{-2.75mm}
 既存研究では,複数のサーバからファイルを分割して並列ダウンロードし,順序通りにクライアントに提供する代理サーバが提案されている\cite{proxy}.
 既存の提案である重複再要求方式では,非有効ブロックの個数がある閾値を超えた場合は別の接続に要求を再送信することで事後的に順序逆転に対処していた.
 この提案では,要求送信時における予防的な順序逆転への対策は行われていない.
 また,動画等の再生を考慮した評価も行われていない.
-\vspace{-8mm}
+\vspace{-7.75mm}
 
 \section{提案方式}
-\vspace{-3mm}
+\vspace{-2.75mm}
 確立したTCP接続群の中で最高性能の接続には,最若番のブロックを要求する.
 ここでの最高性能の定義は使用回数が最多の接続とする.
 低性能の接続には前回の要求送信時からブロック到着までのブロック総受信回数の差分\begin{math}D\end{math}を計測し,
@@ -74,23 +74,23 @@
 \begin{math}T=3, P[B]=0, N=2\end{math}であるので
 接続Bに\begin{math}D=2\end{math}としてブロック要求を送信することで,
 ブロック3-5が順序通りに到着している様子を示している.
-\vspace{-3.5mm}
+\vspace{-2.75mm}
 \begin{equation}
 	\label{eq}
 	D = T - P[X] - N + 1
 \end{equation}
-\vspace{-8mm}
+\vspace{-7.75mm}
 \begin{figure}[h]
 	\centering
-	\includegraphics[width=7.6cm]{figure/delay.pdf}
-	\vspace{-4mm}
+	\includegraphics[width=8.6cm]{figure/delay.pdf}
+	\vspace{-3mm}
 	\caption{遅延要求の模式図}
 	\label{delay}
 \end{figure}
 \vspace{-12mm}
 
 \section{実験と評価}
-\vspace{-3mm}
+\vspace{-2.75mm}
 提案方式を実装したHTTPクライアントを用いてテストベッドと公開ネットワークで評価を行なった.
 本稿では紙面の都合上,公開ネットワークでの結果のみを掲載する.
 公開ネットワークでの実験には利用のしやすさからUbuntuのイメージファイルのパブリックミラーを利用した.
@@ -108,64 +108,63 @@
 これらの値が小さいほど,複数のTCP接続を確立し得られた合計帯域をより有効に利用できているといえる.
 実験結果を表\ref{hyoka}に示す.
 値は平均値,標準偏差の組で表す.
-10回試行の各ブロックIDにおける非有効ブロック数と平均遅延時間をプロットしたものを図\ref{testnsb},\ref{testadt}に示す.
-\vspace{-8mm}
+10回試行の各ブロックIDにおける非有効ブロック数と遅延時間をプロットしたものを図\ref{testnsb},\ref{testadt}に示す.
+\vspace{-7.5mm}
 \begin{table}[htb]
 	\begin{center}
-		\caption{実験結果}
+		\caption{各評価項目の平均値，標準偏差}
 		\vspace{-0.5mm}
 		\label{hyoka}
-		\scalebox{0.65}{
+		\scalebox{0.68}{
 		\begin{tabular}{|c|c|c|c|} \hline
-			方式 & 初期バッファリング時間[s] & 平均非有効ブロック数 & 平均遅延時間[s]\\ \hline \hline
+			方式 & 初期バッファリング時間 & 平均非有効ブロック数 & 平均遅延時間\\ \hline \hline
 			NORMAL & 6.203, 0.717 & 6.435, 0.657 & 1.550, 0.322 \\ \hline
 			DIFF & 3.130, 0.592 & 3.730, 0.390 & 0.866, 0.261 \\ \hline
 		\end{tabular}
 		}
 	\end{center}
 \end{table}
-\vspace{-11.25mm}
+\vspace{-10mm}
 \begin{figure}[h]
 	\centering
-	\includegraphics[width=8cm]{figure/testNSB.pdf}
-	\vspace{-4.5mm}
+	\includegraphics[width=8.5cm]{figure/testNSB.pdf}
+	\vspace{-4mm}
 	\caption{非有効ブロック数}
 	\label{testnsb}
 \end{figure}
-\vspace{-4.5mm}
-
-\vspace{-4mm}
+\vspace{-7.25mm}
 \begin{figure}[h]
 	\centering
-	\includegraphics[width=8cm]{figure/testADT.pdf}
-	\vspace{-4.5mm}
-	\caption{平均遅延時間}
+	\includegraphics[width=8.5cm]{figure/testADT.pdf}
+	\vspace{-4mm}
+	\caption{遅延時間}
 	\label{testadt}
 \end{figure}
-\vspace{-4.5mm}
+\vspace{-3.75mm}
 
-\hspace{-3.5mm}表\ref{hyoka}より,公開ネットワークでの評価おいて提案方式は重複再要求のみの場合と比較して,
+\hspace{-3.5mm}表\ref{hyoka}より,公開ネットワークでの評価おいて提案方式は従来方式と比較して,
 約50\%の初期バッファリング時間の短縮,約30\%の非有効ブロック数の削減,約30\%の平均遅延時間の短縮できたことが確認できる.
-\vspace{-8mm}
+また,図\ref{testnsb},\ref{testadt}からも,非有効ブロック数と平均遅延時間の平均値と標準偏差もDIFF方式のほうが小さいことがわかる.
+\vspace{-7.5mm}
 \section{まとめ}
-\vspace{-3mm}
+\vspace{-2.75mm}
 複数のサーバから同一のファイルを並列に分割ダウンロードする際の順序逆転の発生を抑制する要求方式を提案し,
 実装したHTTPクライアントをテストベッドと公開ネットワークで評価し優位性を確認した.
 今後の課題としては,プロキシとして組み込んだシステムでの実際の動画の視聴体験まで含めた評価などが考えられる.
-\vspace{-7.75mm}
+\vspace{-7.25mm}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 参考文献
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \fontsize{6pt}{0pt}\selectfont{
 \begin{thebibliography}{9}
-\vspace{-3mm}
+\vspace{-2.25mm}
 \bibitem{mhttp}
-Juhoon Kim, Yung-Chih Chen, Ramin Khalili, Don Towsley, Anja Feldmann,
-"Multi-source Multipath HTTP (mHTTP): A Proposal,"
+J. Kim, Y. Chen, R. Khalili, D. Towsley, A. Feldmann,
+Multi-source Multipath HTTP (mHTTP): A Proposal,
 ACM SIGMETRICS Performance Evaluation Review, vol.42, no.1, pp.583-584, 2014.
-\vspace{-2.75mm}
+\vspace{-2.25mm}
 \bibitem{proxy}
-Junichi Funasaka, Atsushi Kawano, and Kenji Ishida: Adaptive Parallel Downloading Method for Proxy Systems, IEICE Trans., Vol.E90-B, no.4, pp.720-727, 2007.
+J. Funasaka, A. Kawano, K. Ishida, Adaptive Parallel Downloading Method for Proxy Systems, IEICE Trans., vol.E90-B, no.4, pp.720-727, 2007.
 \end{thebibliography}}
 
 \end{document}
