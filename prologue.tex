@@ -37,20 +37,20 @@
 {\large 1420180  平城 光雄 Mitsuo Heijo}\\
 {\large 指導教員\ \  舟阪 淳一}\\
 \end{center}
-\vspace{-1mm}
+\vspace{-0.75mm}
 ]
 \fontsize{9.6pt}{0pt}\selectfont
 \section{はじめに}
 \vspace{-2.75mm}
 近年,効率的なコンテンツ配信を目的としたCDNでのコンテンツの分散配置が既に運用されている.
-このような同一のファイルが分散配置されている状況を利用して複数のサーバと同時に通信を行うことで,より高速なファイルの取得を実現する方式が提案されている\cite{mhttp}\cite{proxy}.
+このような同一のファイルが分散配置されている状況を利用して複数のサーバと同時に通信を行うことで,より高速なファイルの取得を実現する方式が提案されている[1][2].
 しかし,既存の提案では動画再生等を考慮した順序制御は目的とされていない.
 本研究では,複数の性能が異なるサーバからTCP接続を通して同一のファイルを分割取得する場合を想定し,要求送信時に各接続の性能を比較することで到着順序逆転を抑制する順序制御方式を提案する.
 \vspace{-7.75mm}
 
 \section{関連研究}
 \vspace{-2.75mm}
-既存研究では,複数のサーバからファイルを分割して並列ダウンロードし,順序通りにクライアントに提供する代理サーバが提案されている\cite{proxy}.
+既存研究では,複数のサーバからファイルを分割して並列ダウンロードし,順序通りにクライアントに提供する代理サーバが提案されている[2].
 既存の提案である重複再要求方式では,非有効ブロックの個数がある閾値を超えた場合は別の接続に要求を再送信することで事後的に順序逆転に対処していた.
 この提案では,要求送信時における予防的な順序逆転への対策は行われていない.
 また,動画等の再生を考慮した評価も行われていない.
@@ -62,7 +62,7 @@
 ここでの最高性能の定義は使用回数が最多の接続とする.
 低性能の接続には前回の要求送信時からブロック到着までのブロック総受信回数の差分\begin{math}D\end{math}を計測し,
 \begin{math}D\end{math}に基づいて最若番でないブロックを要求する.
-\begin{math}D\end{math}は式\ref{eq}から求める.
+\begin{math}D\end{math}は式(\ref{eq})から求める.
 \begin{math}T\end{math}はその時刻でのブロックの総受信回数,
 \begin{math}P[X]\end{math}は接続\begin{math}X\end{math}の前回のブロック到着時におけるブロックの総受信回数,
 \begin{math}N\end{math}は接続の個数である.
@@ -101,16 +101,17 @@
 評価対象は,先行研究で提案されている重複再要求を実装した(NORMAL)と,重複再要求に加えて提案方式を実装した(DIFF)の2種類である.
 \\
 \hspace{3.5mm}評価項目は,初期バッファリング時間,バッファ内の非有効ブロックの数,平均遅延時間である.
-初期バッファリング時間とは図3の最大値である.
-この時間が短くなれば再生開始時の待ち時間が短縮される.
+初期バッファリング時間とは遅延時間の最大値である.
+遅延時間とは各ブロックが円滑に再生できるタイミングからの取得の遅れとする.
+初期バッファリング時間が短くなれば再生開始時の待ち時間が短縮される.
 非有効ブロック数は取得したにもかかわらず,再生が不可能なブロックの数である.
 平均遅延時間は各ブロックが理想的な到着時刻からの正の遅延時間の平均値である.
-これらの値が小さいほど,複数のTCP接続を確立し得られた合計帯域をより有効に利用できているといえる.
+非有効ブロック数,平均遅延時間の値が小さいほど複数TCP接続を確立し得られた帯域をより有効に利用できているといえる.
 実験結果を表\ref{hyoka}に示す.
 値は平均値,標準偏差の組で表す.
 10回試行の各ブロックIDにおける非有効ブロック数と遅延時間をプロットしたものを図\ref{testnsb},\ref{testadt}に示す.
 \vspace{-7.5mm}
-\begin{table}[htb]
+\begin{table}[h]
 	\begin{center}
 		\caption{各評価項目の平均値，標準偏差}
 		\vspace{-0.5mm}
@@ -151,20 +152,14 @@
 複数のサーバから同一のファイルを並列に分割ダウンロードする際の順序逆転の発生を抑制する要求方式を提案し,
 実装したHTTPクライアントをテストベッドと公開ネットワークで評価し優位性を確認した.
 今後の課題としては,プロキシとして組み込んだシステムでの実際の動画の視聴体験まで含めた評価などが考えられる.
-\vspace{-7.25mm}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 参考文献
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\\
+\textbf{\large{参考文献}}
+\\
 \fontsize{6pt}{0pt}\selectfont{
-\begin{thebibliography}{9}
-\vspace{-2.25mm}
-\bibitem{mhttp}
-J. Kim, Y. Chen, R. Khalili, D. Towsley, A. Feldmann,
-Multi-source Multipath HTTP (mHTTP): A Proposal,
-ACM SIGMETRICS Performance Evaluation Review, vol.42, no.1, pp.583-584, 2014.
-\vspace{-2.25mm}
-\bibitem{proxy}
-J. Funasaka, A. Kawano, K. Ishida, Adaptive Parallel Downloading Method for Proxy Systems, IEICE Trans., vol.E90-B, no.4, pp.720-727, 2007.
-\end{thebibliography}}
+[1] J. Kim, Y. Chen, R. Khalili, D. Towsley, A. Feldmann, Multi-source Multipath HTTP (mHTTP): A Proposal,
+ACM SIGMETRICS Performance Evaluation Review, vol.42, no.1, pp.583-584, 2014. [2] J. Funasaka, A. Kawano, K. Ishida, Adaptive Parallel Downloading Method for Proxy Systems, IEICE Trans., vol.E90-B, no.4, pp.720-727, 2007.
 
 \end{document}
