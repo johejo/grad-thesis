@@ -22,4 +22,5 @@ script:
     - docker exec latex bash -c "make all"
 
 deploy:
-    - ./dropbox_uploader upload grad-thesis .pdf .
+    - provider: script
+    - script: dropbox_uploader upload grad-thesis .pdf .
