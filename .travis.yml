@@ -2,6 +2,10 @@ service: docker
 
 language: bash
 
+notifications:
+  email:
+      - funa@hiroshima-cu.ac.jp
+
 addons:
     apt:
         packages:
