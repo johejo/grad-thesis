@@ -23,4 +23,4 @@ script:
 
 deploy:
     - provider: script
-    - script: dropbox_uploader upload grad-thesis .pdf .
+    - script: dropbox_uploader.sh upload grad-thesis .pdf .
