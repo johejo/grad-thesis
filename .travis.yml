@@ -17,7 +17,4 @@ before_install:
 script:
     - docker exec latex bash -c "make clean"
     - docker exec latex bash -c "make all"
-
-deploy:
-    - provider: script
-    - script: deploy.sh
+    - ./deploy.sh
