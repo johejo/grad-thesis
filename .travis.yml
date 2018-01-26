@@ -12,8 +12,14 @@ addons:
             - curl
 
 before_install:
+    - curl "https://raw.githubusercontent.com/andreafabrizi/Dropbox-Uploader/master/dropbox_uploader.sh" -o dropbox_uploader.sh
+    - chmod +x dropbox_uploader.sh
+    - echo "OAUTH_ACCESS_TOKEN=($DROPBOX_TOKEN)"  >  ~/.dropbox_uploader
     - docker run --name latex -itd -v $PWD:/workdir johejo/debian-latex-jp:latest
 
 script:
     - docker exec latex bash -c "make clean"
     - docker exec latex bash -c "make all"
+
+deploy:
+    - ./dropbox_uploader upload grad-thesis .pdf .

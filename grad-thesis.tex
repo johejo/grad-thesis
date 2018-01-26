@@ -27,7 +27,7 @@
 %
 \jtitle{TCP並列接続を用いたプログレッシブダウンロード\\における順序制御方式の実装} % 和文題目
 %
-\etitle{Implementation of sequence control method in progressive download using parallel TCP connection} % 英文題目
+\etitle{Implementation of sequence control method in progressive download using parallel TCP connections} % 英文題目
 %
 \jaffil{広島市立大学 情報科学部 情報工学科}
 \eaffil{Department of Computer and Network Engineering\\
@@ -45,18 +45,18 @@ Hiroshima City University}
 効率的なコンテンツの配信方法としてCDNを利用したコンテンツ分散配置やDNSのキャッシュサーバ単位で異なるIPアドレスを返すことによる広域負荷分散などがすでに運用されている.
 このように同一のコンテンツが様々な場所に配置されていることを利用して複数のWebサーバーと同時並行的に多重通信を行うことで,より高速で快適な通信を実現しようとする技術が様々な場所で開発および提案されている.
 本研究では,性能の異なる複数のTCP接続を利用して同一のファイルを取得しながら利用する場合における既知の問題に対処するために,各TCP接続間の性能を比較しながら到着順序逆転の発生を抑制することを目的としたリクエスト送信時における能動的なHTTPプログレッシブダウンロード順序制御方式を提案する.
-そしてこの提案手法を実装し,テストベッドおよびパブリックネットワーク上で評価した.
+そして提案手法を実装し,テストベッドおよび公開ネットワーク上で評価した.
 テストベッドでの評価では,差分要求方式はTCP接続間の性能差を入力することなく固定遅延要求方式と同等の性能を獲得することができた.
-また,パブリックネットワークでの評価では差分計測を用いた遅延予測方式は初期遅延予測方式と組み合わせることで制御なしの場合と比べて,50\%の初期バッファリング時間の削減,30\%の非有効ブロック数の削減と50\%の平均遅延時間の削減が確認できた.
+また,公開ネットワークでの評価では差分計測を用いた遅延予測方式は初期遅延予測方式と組み合わせることで制御なしの場合と比べて,50\%の初期バッファリング時間の削減,30\%の非有効ブロック数の削減と50\%の平均遅延時間の削減が確認できた.
 } %
 
 \eabst{ % 英文梗概
 \hspace*{1em}
 In recent years, the development of network infrastructure and the improvement of the quality of moving images have been advanced, and the increase in the capacity of Web contents is remarkable.
 Distributed content distribution using CDN as an efficient content distribution method and wide area load distribution by returning different IP addresses in cache server units of DNS are already in operation.
-In this way, by utilizing the fact that the same contents are arranged in various places, simultaneous concurrent multiplexing communication with a plurality of web servers is carried out, so that various technologies to realize higher speed and comfortable communication vary Have been developed and proposed in places.
-In this research, in order to deal with the known problem when utilizing the same file while acquiring the same file by using plural TCP connections with different performances, while comparing the performance between each TCP connection, occurrence of inversion order inversion We propose an active HTTP progressive download order control method at request transmission aimed at suppressing download progress.
-We implemented this proposed method and evaluated it on test bed and public network.
+In this way, by utilizing the fact that the same contents are arranged in various places, simultaneous concurrent multiplexing communication with a plurality of Web servers is carried out, whereby various technologies to realize higher speed and comfortable communication are available Have been developed and proposed in places.
+In this research, in order to deal with the known problem when utilizing the same file while acquiring the same file by using plural TCP connections with different performances, while comparing the performance between each TCP connection, occurrence of inversion order inversion We propose an active HTTP progressive download order control method at request transmission for the purpose of suppressing download progress.
+We implemented the proposed method and evaluated it on the test bed and the public network.
 In the test bed evaluation, the difference request method was able to acquire the same performance as the fixed delay request method without inputting the performance difference between the TCP connections.
 In addition, in the evaluation on the public network, the delay prediction method using the difference measurement is combined with the initial delay prediction method to reduce the initial buffering time by 50\%, the ineffectiveness of 30\% We were able to confirm the reduction of the number of blocks and the reduction of the average delay time by 50\%.
 }
@@ -74,13 +74,16 @@ In addition, in the evaluation on the public network, the delay prediction metho
 すでに一つのサービスを1台の物理サーバーで処理できる時代は等の昔に終焉を迎えている.
 よってこれらの問題に対処するためには,Webサーバーのハードウェアおよびサーバー上で稼働するソフトウェアの進化だけでなく,負荷を分散させることがキーポイントとなっている.
 効率的なコンテンツの配信方法としてCDNを利用したコンテンツ分散配置やDNSのキャッシュサーバ単位で異なるIPアドレスを返すことによる広域負荷分散などがすでに運用されている.
-このように同一のコンテンツが様々な場所に配置されていることを利用して複数のWebサーバーと同時並行的に多重通信を行うことで,より高速で快適な通信を実現しようとする技術が様々な場所で開発および提案されている.
+このように同一のコンテンツが様々な場所に配置されていることを利用して複数のWebサーバーと同時並行的に多重通信を行うことで,より高速で快適な通信を実現しようとする技術が提案されている.
+既存の提案である重複再要求方式では, 
+非有効ブロックの個数がある閾値を超えた場合は別の接続に要求を再送信することで事後的に順序逆転に対処していた.
+この提案では, 要求送信時における予防的な順序逆転への対策は行われていない.
 本研究では,性能の異なる複数のTCP接続を利用して同一のファイルを取得しながら利用する場合における既知の問題に対処するために,各TCP接続間の性能を比較しながら到着順序逆転の発生を抑制することを目的としたリクエスト送信時における能動的な順序制御方式を提案する.
 また,提案手法をHTTPクライアントとして実装し,実際のインターネット上で手法を検証する.
 本論文の構成について以下に示す.
 2章において関連技術である複数TCP接続を用いた通信方式,ファイルをダウンロードしながらその一部分から利用するプログレッシブダウンロード方式, およびプログレッシブダウンロードにおける既知の問題への解決策について示す.
 3章ではTCP接続間の性能差からブロックの到着順序予測し、順序逆転を抑制する要求方式について提案する.
-4章では提案手法を実装し,テストベッドおよびパブリックネットワーク上での実験を行うことで,提案手法を評価し,検証する.
+4章では提案手法を実装し,テストベッドおよび公開ネットワーク上での実験を行うことで,提案手法を評価し,検証する.
 5章ではまとめと今後の課題を示す.
 
 
@@ -142,10 +145,10 @@ HTTPを利用したストリーミング方式としてはHLS(HTTP LiveStreaming
 図\ref{block}が示すように,先頭から連続するブロック1及びブロック2は再生可能である(有効ブロック)が,それ以外のブロック3及びブロック5は未受信のブロックを間に挟んでいるため再生することはできない(非有効ブロック).
 複数のTCP接続を束ねることでグッドプットを向上させても,受信ブロックが有効ブロックでない限りは応答性は低下してしまい,動画の再生が停止するなどしてユーザー体験は悪化することが予想できる.
 また,バッファ使用量の観点から見ても多数の非有効ブロックをメモリ上に保持し続けるのは,好ましくないと言える.
- 
-\begin{figure}[ht]
+
+\begin{figure}[h]
 	\centering
-	\includegraphics[width=18cm]{figure/block.pdf}
+	\includegraphics[width=17cm]{figure/block.pdf}
 	\caption{ブロックの有効性}
 	\label{block}
 \end{figure}
@@ -177,6 +180,7 @@ HTTPを利用したストリーミング方式としてはHLS(HTTP LiveStreaming
  タイマ駆動とは前ブロックの要求送信からある時間が経過したら次ブロックへの要求を行う.
  このとき前ブロックの受信完了を待つことはない.
  図\ref{timer}に模式図を示す.
+ 
  先行研究としてはタイマ駆動を用いた要求方式において,TCP接続間の性能差を要求の送信間隔に反映させる方式が提案されている.
  
  \begin{figure}[ht]
@@ -205,21 +209,26 @@ HTTPを利用したストリーミング方式としてはHLS(HTTP LiveStreaming
 
 \subsection{遅延要求について}
 \label{chienyokyu}
-この章で定義する遅延要求についての概要を述べる.まず,確立したTCP接続群の中で性能の最も高いTCP接続には,最も若番のブロックを要求する.
-続いて,比較性能の低いあるTCP接続に関して,ブロック要求の送信からブロックの到着までの間隔を算出し,
-その算出値に基づいてその時点での最も若番のブロックではない後ろのブロックを要求する.
-図\ref{delay}にその模式図を示す.この例では,接続Aは接続Bの2倍の性能を持つと仮定する.
-この条件より接続Bがブロックを1個取得する間に接続Aはブロックを2個取得取得することが予想できる.
-よって時刻t=0に接続Aにはブロック0を要求し,接続Bにはブロック2を要求する.
-t=1には接続Aにブロック番号0が到着し,続いて接続Aがにブロック1を要求する.
-時刻t=2において接続Aには2より若い番号のブロックが到着済みであり,接続Bはブロック2の取得が完了する.
-よってブロックの到着順序逆転を抑制することができる.
+この章で定義する遅延要求についての概要を述べる.まず,確立したTCP接続群の中で性能の最も高いTCP接続には,要求が未送信である最も若番のブロックを要求する.
+ここでの最高性能の定義は使用回数が最多の接続とする.
+比較性能の低いあるTCP接続には,その時点での最も若番ではないブロックを要求する.
+以降,この最も若番ではないブロックを要求することを遅延要求と呼称する.
+図\ref{delay}にその模式図を示す.
+この例では,接続Aは接続Bの2倍の性能を持ち,接続Aは最高性能であると仮定する.
+まず,この条件より接続Bがブロックを1個取得する間に接続Aはブロックを2個取得取得することが予想でき,
+接続Bは最若番よりも2つ後ろのブロックを要求する.
+\begin{math}t=0\end{math}において,
+最高性能である接続Aには最若番のであるブロック0を,
+接続Bには2つ後ろであるブロック2を要求する.
+これを繰り返すことで図\ref{delay}の例ではブロック0-5が順序逆転を起こすことなく,
+順序通りに到着する.
+
 \ref{kotei}節ではあらかじめ各接続間の性能差が既知であるとして,その値にしたがって遅延要求を行う方式について述べる.
 \ref{diff}節では各接続ごとにブロック到着間隔を逐次測定することで性能差を算出し,その値にしたがって遅延要求を行う方式について述べる.
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=16.25cm]{figure/delay.pdf}
+    \includegraphics[width=16.25cm]{figure/delay-n.pdf}
     \caption{遅延要求の模式図}
     \label{delay}
 \end{figure}
@@ -229,10 +238,7 @@ t=1には接続Aにブロック番号0が到着し,続いて接続Aがにブロ�
 固定遅延方式は,予めTCP接続間の性能差をシステムに入力して遅延要求を行うことで到着順序逆転の抑制を試みる方式である.
 しかし,実ネットワークでは予めTCP接続間の性能差が既知であることは稀であるので実環境への応用は限定的であると言わざるを得ない.
 よって本研究では本方式は主として,他の方式がどれだけTCP接続間の性能差を正確に把握できているかどうかを比較し確認するために用いる.
-固定遅延要求方式の実装は単純である.
-TCP接続の最大帯域性能差比が予めわかっっているので,容易にブロックの予定到着順序がわかる.
-よって予定到着順序を考慮し,正しい順序で到着するように要求送信を並び替えるだけである.
-固定遅延方式は理論上ではほとんどブロックの到達順序逆転を抑制することができる.
+詳細な動作については,\ref{chienyokyu}で述べたとおりである.
 
 \subsection{差分計測を用いた遅延予測方式}
 \label{diff}
@@ -244,25 +250,25 @@ TCP接続の最大帯域性能差比が予めわかっっているので,容易�
 	\caption{Compute Diff}
 	\begin{algorithmic}[1]
 		\State {$T \gets Total\ Receive\ Count$}
-		\State {$P \gets Previous\ Total\ Receive\ Counts $}
+		\State {$P[X] \gets Previous\ Total\ Receive\ Count\ for\ Connection\ X$}
 		\State {$N \gets Number\ Of\ Connections$}
-		\If{Is it the highest performance} 
+		\If{Is \begin{math}X\end{math} the highest performance} 
 		\State {$D \leftarrow 0$}
 		\Else 
-		\State {$D \leftarrow T - P - N $}
+		\State {$D \leftarrow T - P - N + 1$}
 		\EndIf
 	\end{algorithmic}
 \end{algorithm}
 
 このアルゴリズムでは一つ前の送信時から現在まで全体の総受信ブロック数のカウントがいくつ増加したかを計算する.
 なお,このアルゴリズムではTCP接続の性能の時間変化については考慮していない.
-よってTCP接続に急激な性能変化が発生した場合などに予測的な見積もりを行うことはできないので,追従が少し遅れる可能性がある.
+よってTCP接続に急激な性能変化が発生した場合などに予測的な見積もりを行うことはできないので,追従が遅れる可能性がある.
 
 \newpage
 
 \section{初期遅延予測}
 \label{shoki}
-\ref{diff}節の遅延要求方式は実装上の都合,最初のリクエスト送信の際にはTCP接続間の性能差が不明であるため,遅延要求を行うことができない.
+\ref{diff}節の遅延要求方式は実装上の都合,このままでは最初のリクエスト送信の際にはTCP接続間の性能差が不明であるため,遅延要求を行うことができない.
 しかし実際にエンドユーザーが動画再生を行うことを想定すると,初期バッファリング時間の長さは視聴体験に大きく影響を及ぼすことが予想される.
 本節ではこの問題の解決案として初期値を予測し初期バッファリング時間の短縮を目指す方式を提案する.
 
@@ -271,8 +277,8 @@ TCP接続の最大帯域性能差比が予めわかっっているので,容易�
 \ref{chienyokyuhoshiki}節の遅延要求方式では,事前にHTTPのHEADリクエストを相手サーバーに送信し,ファイルサイズ等の情報を取得する.
 このHEADリクエスト-レスポンスの応答時間を計測することで,各TCP接続間の性能差も推測できる.
 ただし,後続のGETリクエストの応答メッセージサイズはHEADリクエストのそれよりも大きく,実際には一つのHTTPレスポンスに対して複数のTCPセグメントがやり取りされるので,厳密な意味での応答時間ではなく単一のHEADリクエスト-レスポンスの応答時間であることに注意が必要である.
+\begin{math}D(a), D(b)\end{math}間の比から\begin{math}T(a), T(b)\end{math}間の比を予測することが初期遅延予測の目的である.
 図\ref{head}に初期遅延予測の模式図を示す.
-D(a), D(b)間の比からT(a), T(b)間の比を予測することが初期遅延予測の目的である.
 
 \begin{figure}[ht]
 	\centering
@@ -324,6 +330,7 @@ TCPのウィンドウサイズがネットワーク状況に応じて変化す�
 本評価では重複再要求方式として\ref{juhuku}を改良し非有効ブロックの受信回数を閾値として用いる.
 これは実装上の都合であり,関連研究のアルゴリズムとは若干異なるが本研究では重複再要求の実装方式を比較することは目的としない.
 既に重複再要求方式の有効性は先行研究において確認されているので,全ての実験は重複再要求を行うことを前提としている.
+また,取得するファイルは,映像と音声合わせてビットレートが40Mbpsで長さが150秒の動画の取得を仮定し,754MByteのイメージファイルを選択した.
 
 \section{評価項目}
 \label{hyoukakoumoku}
@@ -429,15 +436,15 @@ DIFFは差分計測を用いた遅延要求方式,NORMALは常時最若番を要
 
 \clearpage
 
-\section{パブリックネットワークでの評価}
+\section{公開ネットワークでの評価}
 \label{pub}
-パブリックネットワークでの評価にあたり,Ubuntuのリリースイメージファイルの配布に用いられているパブリックミラーを利用した.
-表\ref{tablemirror}に使用したパブリックミラーを示す.
-また,参考として各パブリックミラーの24時間の性能変化について図\ref{24h}に示す.実験の際にダウンロードしたファイルおよび実験パラメータはテストベッドのものと同一である.
+公開ネットワークでの評価にあたり,Ubuntuのリリースイメージファイルの配布に用いられている公開ミラーを利用した.
+表\ref{tablemirror}に使用した公開ミラーを示す.
+また,参考として各公開ミラーの24時間の性能変化について図\ref{24h}に示す.実験の際にダウンロードしたファイルおよび実験パラメータはテストベッドのものと同一である.
 図\ref{24h}からわかるように15時から18時においてネットワークの変化が大きいと判断しこの時間帯で実験を行った.
 \begin{table}[htb]
 	\begin{center}
-		\caption{使用したパブリックミラー一覧}
+		\caption{使用した公開ミラー一覧}
 		\label{tablemirror}
 		\begin{tabular}{|l|l|l|} \hline
 			ホスト & 組織 & 国\\ \hline \hline
@@ -454,7 +461,7 @@ DIFFは差分計測を用いた遅延要求方式,NORMALは常時最若番を要
 	\end{center}
 \end{table}
 
-パブリックミラーを利用した実験の結果を図\ref{ibtpub},図\ref{nsbpub}および図\ref{adtpub}に示す.
+公開ミラーを利用した実験の結果を図\ref{ibtpub},図\ref{nsbpub}および図\ref{adtpub}に示す.
 DIFFは差分計測を用いた遅延要求方式,NORMALは常時最若番を要求する方式(制御を何も行わない)方式である.
 ネットワークの情報が未知の場合でも差分計測を用いた遅延要求方式は,制御を行わない場合と比較して初期バッファリング時間を50\%, 平均非有効ブロック数を30\%, 平均遅延時間を50\%削減することを達成している.
 
@@ -463,7 +470,7 @@ DIFFは差分計測を用いた遅延要求方式,NORMALは常時最若番を要
         \begin{tabular}{cc}
         	\begin{minipage}[t]{0.9\hsize}
         		\includegraphics[width=14cm]{figure/thp24h.pdf}
-        		\caption{各パブリックミラーの24時間の性能の変化}
+        		\caption{各公開ミラーの24時間の性能の変化}
         		\label{24h}
         	\end{minipage}\\
         	\begin{minipage}[t]{0.9\hsize}
@@ -525,7 +532,7 @@ DIFFは差分計測を用いた遅延要求方式,NORMALは常時最若番を要
 提案方式は,各TCP接続におけるブロックの到着間隔を計測することでそのTCP接続に遅延要求を行うことで到着順序の逆転を抑制する方式である.
 次に実装したプログラムをテストベッドおよびネットワーク環境が未知の公開ネットワーク上で動作させて評価を行った.
 テストベッドでの評価では,差分要求方式はTCP接続間の性能差を入力することなく固定遅延要求方式と同等の性能を獲得することができた.
-また,パブリックネットワークでの評価では差分計測を用いた遅延予測方式は初期遅延予測方式と組み合わせることで制御なしの場合と比べて,50\%の初期バッファリング時間の削減,30\%の非有効ブロック数の削減と50\%の平均遅延時間の削減が確認できた.
+また,公開ネットワークでの評価では差分計測を用いた遅延予測方式は初期遅延予測方式と組み合わせることで制御なしの場合と比べて,50\%の初期バッファリング時間の削減,30\%の非有効ブロック数の削減と50\%の平均遅延時間の削減が確認できた.
 
 
 \section{今後の課題}
