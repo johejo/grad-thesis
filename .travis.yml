@@ -2,9 +2,9 @@ service: docker
 
 language: bash
 
-# notifications:
-#   email:
-#       - funa@hiroshima-cu.ac.jp
+notifications:
+  email:
+      - mitsuo_h@outlook.com
 
 addons:
     apt:
@@ -15,6 +15,5 @@ before_install:
     - docker run --name latex -itd -v $PWD:/workdir johejo/debian-latex-jp:latest
 
 script:
-    - docker exec latex bash -c "make clean"
-    - docker exec latex bash -c "make all"
-    - ./deploy.sh
+    - docker exec latex bash build.sh
+    - ./upload.sh
