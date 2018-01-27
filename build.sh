@@ -12,7 +12,7 @@ do
     $LATEX $PROJECT.tex
 done
 
-$DVIPDF $PROJECT.dvi
+$DVIPDF -f $PROJECT.map $PROJECT.dvi
 
 mkdir $BUILD_DIR
 mv $PROJECT.pdf $BUILD_DIR/
