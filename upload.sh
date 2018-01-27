@@ -7,4 +7,3 @@ readonly DROPBOX_UPLOADER_URL=https://raw.githubusercontent.com/andreafabrizi/Dr
  chmod +x dropbox_uploader.sh
  echo "OAUTH_ACCESS_TOKEN=($DROPBOX_TOKEN)"  >  ~/.dropbox_uploader
 ./dropbox_uploader.sh upload $BUILD_DIR/grad-thesis.pdf .
-./clean.sh
