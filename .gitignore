@@ -221,3 +221,5 @@ TSWLatexianTemp*
 
 # add build directory
 build
+grad-thesis.pdf
+prologue.pdf
