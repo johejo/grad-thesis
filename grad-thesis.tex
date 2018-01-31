@@ -47,7 +47,7 @@ Hiroshima City University}
 本研究では,性能の異なる複数のTCP接続を利用して同一のファイルを取得しながら利用する場合における既知の問題に対処するために,各TCP接続間の性能を比較しながら到着順序逆転の発生を抑制することを目的としたリクエスト送信時における能動的なHTTPプログレッシブダウンロード順序制御方式を提案する.
 そして提案手法を実装し,テストベッドおよび公開ネットワーク上で評価した.
 テストベッドでの評価では,差分要求方式はTCP接続間の性能差を入力することなく固定遅延要求方式と同等の性能を獲得することができた.
-また,公開ネットワークでの評価では差分計測を用いた遅延予測方式は初期遅延予測方式と組み合わせることで制御なしの場合と比べて,50\%の初期バッファリング時間の削減,30\%の非有効ブロック数の削減と50\%の平均遅延時間の削減が確認できた.
+また,公開ネットワークでの評価では差分計測を用いた遅延予測方式は初期遅延予測方式と組み合わせることで制御なしの場合と比べて,50\%の初期バッファリング時間の削減,50\%の非有効ブロック数の削減と30\%の平均遅延時間の削減が確認できた.
 } %
 
 \eabst{ % 英文梗概
@@ -58,7 +58,7 @@ In this way, by utilizing the fact that the same contents are arranged in variou
 In this research, in order to deal with the known problem when utilizing the same file while acquiring the same file by using plural TCP connections with different performances, while comparing the performance between each TCP connection, occurrence of inversion order inversion We propose an active HTTP progressive download order control method at request transmission for the purpose of suppressing download progress.
 We implemented the proposed method and evaluated it on the test bed and the public network.
 In the test bed evaluation, the difference request method was able to acquire the same performance as the fixed delay request method without inputting the performance difference between the TCP connections.
-In addition, in the evaluation on the public network, the delay prediction method using the difference measurement is combined with the initial delay prediction method to reduce the initial buffering time by 50\%, the ineffectiveness of 30\% We were able to confirm the reduction of the number of blocks and the reduction of the average delay time by 50\%.
+In addition, in the evaluation on the public network, the delay prediction method using the difference measurement is combined with the initial delay prediction method to reduce the initial buffering time by 50\%, the ineffectiveness of 50\% We were able to confirm the reduction of the number of blocks and the reduction of the average delay time by 30\%.
 }
 \begin{document} 
 \maketitle %とびらの出力
@@ -338,18 +338,22 @@ TCPのウィンドウサイズがネットワーク状況に応じて変化す�
 \section{提案手法の実装}
 提案手法を実装したプログラムの概要を説明する.
 実装はPythonで行った.
-まず,入力として複数のホストのURL,分割サイズ等を入力する.
+まず,ユーザーは複数のホストのURL,分割サイズ等を引数とするオブジェクトを生成する.
 プログラムはURLが有効であるかをHTTP HEADリクエストを用いて確認する.
 入力された分割サイズを元にブロック1個あたりのバイト数を決定し,
-HTTP-Range リクエストに必要なヘッダーを生成してキューに保管する.
-便宜上キューと呼称しているが、このキューは任意の位置のデータを取り出すことのできるように改良してある
+HTTP-Range リクエストに必要なヘッダーを生成してスレッドセーフなキューに保管する.
+便宜上キューと呼称しているが、
+このキューは任意の位置のデータを取り出すことのできるように改良してある.
 次にホストとの接続を確立する.
 ここでは既存のHTTPライブラリをセッション層に利用している.
-次にホスト数の子スレッドを起動し,ファイル全体が揃うまで各スレッドがキューからヘッダーをとりだして各ホストに要求を送信し,ブロックの受信が終了したら親スレッドにブロック受信完了を通知し,スレッド共有のメモリ上に保管するという作業を繰り返す.
-親スレッドはファイル全体の返却が終了するまで,子スレッドからの通知を受け取ると共有メモリを確認して順序が揃った部分を連結してユーザーに返却する,
-という作業を繰り返す.
-この返却についてはジェネレータオブジェクトを利用することで,
-ユーザーは任意のタイミングでデータを読み出すことができる.
+ここまでがコンストラクタである.
+ユーザーがダウンロード開始メソッドを呼び出すと,ホスト数だけの子スレッドを起動する.
+各子スレッドはファイル全体が揃うまでキューからヘッダーをとりだして各ホストに要求を送信し,
+ブロックの受信が終了したらスレッド共有のメモリ上に保管したのち親スレッドに通知を送信するという作業を繰り返す.
+親スレッドはユーザーからのデータの読み出しがあった場合,共有メモリを確認してその時点で順序が揃った部分を連結してユーザーに返却する.
+このときユーザーに返却すべきデータが存在しない場合,子スレッドからの通知を待つ.
+この返却についてはイテレータを利用することで,
+ユーザーは任意のタイミングで順序の揃った部分を読み出すことができる.
 
 
 \newpage
@@ -472,9 +476,6 @@ DIFF-Falseは初期遅延予測を行わない差分計測を用いた遅延要�
 理論的に可能な限り初期バッファリング時間を削減していると言える.
 
 図\ref{nsb}より,差分計測を用いた遅延要求方式は非有効ブロック数を大幅に削減することができている.
-固定遅延要求方式における平均非有効ブロック数が0でなく0.5に近い値である理由として,
-ブロック到着時刻の微妙なずれからある時刻に置いて非有効ブロック数が1となる場合と,
-到着順序逆転が発生せず非有効ブロック数が0である場合がほぼ同等に発生している可能性が挙げられる.
 初期遅延予測を行わない場合は,初期リクエスト時において非有効ブロックが生じていることも確認できる.
 
 図\ref{adt}より,平均遅延時間についても,固定遅延要求方式とほぼ同等の値が得られており,
