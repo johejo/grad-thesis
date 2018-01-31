@@ -354,9 +354,19 @@ HTTP-Range リクエストに必要なヘッダーを生成してスレッドセ
 このときユーザーに返却すべきデータが存在しない場合,子スレッドからの通知を待つ.
 この返却についてはイテレータを利用することで,
 ユーザーは任意のタイミングで順序の揃った部分を読み出すことができる.
+図\ref{sphttp}に提案手法についての概要を示す.
 
+%\clearpage
 
-\newpage
+\begin{figure}[h]
+	\label{sphttp}
+	\begin{center}
+		\includegraphics[width=15cm]{figure/sphttp.pdf}
+		\caption{提案手法についての図}
+	\end{center}
+\end{figure}
+
+\clearpage
 
 
 \section{評価対象}
