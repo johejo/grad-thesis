@@ -2,7 +2,7 @@
 %\usepackage[dviout]{graphicx}
 \usepackage[dvipdfmx]{graphicx}
 %\usepackage{graphicx}
-%\usepackage{algorithmic}
+%\usepackage{pxjahyper}
 \usepackage{listings}
 \usepackage{algpseudocode,algorithm}
 \usepackage{url}
@@ -71,19 +71,22 @@ Moreover, in the evaluation on the public network, the delay prediction method u
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{はじめに}\label{sec:sec1}
 %%% abst %%%
+\section{研究背景}
 近年,ネットワークインフラの整備とおよび動画像高画質化が進んでおり,Webコンテンツの大容量化が顕著である.
 また,LTE等の通信網の発達と携帯型端末の普及がかつてない速度で進んでおり,非常に多くの端末が常時インターネットに接続する時代となっている.
 これにともない,Webサーバ等のネットワークインフラにかかる負担も増加しているものの,それを処理するコンピュータのハードウェアの進化の速度は,年々鈍化傾向にある.
 よってこれらの問題に対処するためには,Webサーバのハードウェアおよびサーバ上で稼働するソフトウェアの進化だけでなく,負荷を分散させることがキーポイントとなっている.
-効率的なコンテンツの配信方法としてCDN(Contents Delivery Network)を利用したコンテンツ分散配置やDNSのキャッシュサーバ単位で異なるIPアドレスを返すことによる広域負荷分散などがすでに運用されている.
+効率的なコンテンツの配信方法としてCDN(Content Delivery Network)を利用したコンテンツ分散配置やDNSのキャッシュサーバ単位で異なるIPアドレスを返すことによる広域負荷分散などがすでに運用されている.
 このように同一のコンテンツが様々な場所に配置されていることを利用して複数のWebサーバと同時並行的に多重通信を行うことで,より高速で快適な通信を実現しようとする技術が提案されている.
 既存の提案である重複再要求方式では, 
 非有効ブロックの個数がある閾値を超えた場合は別の接続に要求を再送信することで事後的に順序逆転に対処していた.
 この提案では, 要求送信時における予防的な順序逆転への対策および動画再生を考慮した評価は行われていない.
 
+\section{本研究の概要}
 本研究では,性能の異なる複数のTCP接続を利用して同一のファイルを取得しながら利用する場合における既知の問題に対処するために,各TCP接続間の性能を比較しながら到着順序逆転の発生を抑制することを目的としたリクエスト送信時における予防的な順序制御方式を提案する.
 また,提案手法をHTTPクライアントとして実装し,実際のインターネット上で手法を検証する.
 
+\section{論文の構成}
 本論文の構成について以下に示す.
 2章において関連技術である複数TCP接続を用いた通信方式,ファイルをダウンロードしながらその一部分から利用するプログレッシブダウンロード方式, およびプログレッシブダウンロードにおける既知の問題への解決策について示す.
 3章ではTCP接続間の性能差からブロックの到着順序予測し、順序逆転を抑制する要求方式について提案する.
@@ -97,42 +100,92 @@ Moreover, in the evaluation on the public network, the delay prediction method u
 \chapter{関連研究}\label{sec:sec2}
 本章では関連研究について述べる.
 
-\section{TCP接続を複数用いるHTTP}
-複数のTCP接続を利用することで,より大きなサイズのファイルを効率よくダウンロードする方式としてmHTTP\cite{mhttp}が提案されている.
+\section{TCP接続を複数用いるHTTP関連技術}
+\subsection{mHTTP}
+複数のTCP接続を利用することで,より大きなサイズのファイルを効率よくダウンロードするHTTPの互換方式としてMulti-source Multipath HTTP (mHTTP)\cite{mhttp}が提案されている.
 mHTTPではDNSレコードを複数使用することで複数のTCP接続を確立した上で,既存のHTTPと同等の機能を提供する方式を提案している.この方式ではアプリケーション開発者やコンテンツプロバイダに大きな仕様変更を強いることなく,複数TCP接続を利用して効率的なダウンロードを実現している.
-mHTTPクライアントの構造について図\ref{mhttp}に示す.
+mHTTPクライアントの動作概要について図\ref{mhttp}に示す.
 
-\begin{figure}[ht]
+\begin{figure}[h]
 	\centering
-	\includegraphics[width=16cm]{figure/mhttp.pdf}
-	\caption{mHTTPの構造}
+	\includegraphics[width=14cm]{figure/mhttp.pdf}
+	\caption{mHTTPクライアントの動作概要(文献\cite{mhttp}より引用)}
 	\label{mhttp}
 \end{figure}
 
 \newpage
 
-また,複数のTCP接続を使用して,複数のサーバから同一のファイルを取得し,クライアントに対して単一のバイトストリームとして応答を返すHTTPプロキシの提案が既になされている.\cite{proxy}
-この研究では遅延しているブロックに対する冗長的な重複再要求を行うことで,バッファの使用量の削減とスムーズなダウンロードを実現しながらも,冗長な要求によるダウンロード時間の増加を抑える試みが提案されている.
+図\ref{mhttp}の動作手順について以下に示す.
+\begin{enumerate}
+\item HTTPアプリケーションはmultiDNSにホストのIPアドレスを問い合わせる
+\item multiDNSはDNSリゾルバにIPアドレスを問い合わせる
+\item DNSリゾルバはmultiDNSにIPアドレスを返す
+\item multiDNSはHTTPアプリケーションにIPアドレスを返す
+\item HTTPアプリケーションはmultiHTTPにHTTPリクエストを行う
+\item multiHTTPはmultiDNSに対象のホストの別のIPアドレスを問い合わせる
+\item multiDNSはmultiHTTPにIPアドレスを返す
+\item multiHTTPは複数のIPアドレスを利用して複数接続を確立し,TCPソケットAPIに複数のメッセージを送る
+\item TCPソケットAPIはカーネルの提供するTCPにメッセージを送る
+\item カーネルの提供するTCPはTCPソケットAPIにメッセージを返す
+\item TCPソケットAPIはmultiHTTPにメッセージを返す
+\item multiHTTPはHTTPアプリケーションに複数のメッセージを連結して返す
+\end{enumerate}
 
+通常のHTTPではひとつのファイルをひとつのコネクションの一往復のリクエストとレスポンスでやりとりするが,
+mHTTPではFQDNから複数のIPアドレスを引くことで複数のTCP接続(多くの場合別々の経路)を利用して一つのファイルを分割して取得する.
+
+\newpage
+
+\subsection{プロキシシステムにおける適応型\\並列ダウンロード方式}
+複数のTCP接続を使用して,複数のサーバから同一のファイルを分割取得し,クライアントに対して単一のバイトストリームとして応答を返すHTTPプロキシの提案が既にされている\cite{proxy}.
+この研究では遅延しているブロックに対する冗長的な重複再要求を行うことで,バッファの使用量の削減とスムーズなダウンロードを実現している.
+図\ref{proxysystem}にシステムの概要を示す.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=16cm]{figure/proxy.pdf}
+	\caption{プロキシシステム}
+	\label{proxysystem}
+\end{figure}
+
+\newpage
+
+\subsection{モダンWebブラウザで用いられる技術}
+複数のTCP接続を用いるHTTP関連技術の身近な例としてChromeやFirefoxなどのモダンWebブラウザがある.
+モダンWebブラウザはホストに対して複数のTCP接続(多くのモダンWebブラウザでは6本程度)を確立し,Webページの構成要素(一般的なWebページはベースのHTMLと複数の埋め込み画像やスクリプト等で構成されている.
+)を並列で取得する.
+本来のHTTP(HTTP/1.1)では一つのTCP接続には同時に一つのファイルしかやり取りができないが,
+TCP接続を複数確立することで,別々のファイルを同時に取得することができる.
+この技術は単一のファイルを素早く取得できるような仕組みではなく,
+多数の様々なファイルで構成されたWebページの閲覧時におけるレンダリングの高速化において効果を発揮する.
+図\ref{browser}に概要を示す
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=16cm]{figure/browser.pdf}
+	\caption{モダンWebブラウザでの複数TCP接続}
+	\label{browser}
+\end{figure}
 
 \section{プログレッシブダウンロード方式}
 ネットワークの大容量化,高速化に伴い,Youtube\cite{youtube}やNetflix\cite{netflix}などの動画配信サービスの利用が増加している.
-動画配信サービスにはUDP上に独自のアプリケーションプロトコルをサーバおよびクライントに実装し利て配信するプッシュベースの方式と,TCP上でHTTPを用いて利用するプルベースの方式などがある.
+動画配信サービスにはUDP上に独自のアプリケーションプロトコルをサーバおよびクライントに実装し利て配信するプッシュベースの方式と,TCP上でHTTPを用いて利用するプルベースの方式などがある\cite{streaming}.
 中でもアプリケーションプロトコルとしてHTTPを用いるプルベース方式は,エンドユーザーは特別なソフトウェアの準備等をする必要はなく,基本的にはブラウザさえあれば利用可であり,またアプリケーションプロトコルがHTTPであることからサービスの提供者もAkamaiやFastlyに代表されるCDNのサービスを利用することで効率の良い配信が可能であるため,近年急速に広がっている.
 HTTPを利用したストリーミング方式としてはHLS(HTTP LiveStreaming)\cite{hls}やMPEG-DASH(MPEG-Dynamic Adaptive Streaming over HTTP)\cite{dash}がある.
-プログレッシブダウンロードとは,こうしたプルベース方式の中でも基本的なファイルのダウンロードを応用することでファイルを部分的にダウンロードしながらダウンロードの完了した部分からブラウザのレンダリングや動画再生等に利用する方式である.\\
-\ \ \ \ プログレッシブダウンロードでは基本的にはダウンロード済みのデータはキャッシュとして再利用可能であるので,著作権など再利用に制限を加えたい場合や生放送形式での動画配信についてはをHLSやMPEG-DASHベースとしてフロントエンドおよびサーバサイドでの実装が必要である.
+プログレッシブダウンロードとは,こうしたプルベース方式の中でも基本的なファイルのダウンロードを応用することでファイルを部分的にダウンロードしながらダウンロードの完了した部分からブラウザのレンダリングや動画再生等に利用する方式である.
+
+プログレッシブダウンロードでは基本的にはダウンロード済みのデータはキャッシュとして再利用可能であるので,著作権など再利用に制限を加えたい場合や生放送形式での動画配信についてはをHLSやMPEG-DASHベースとしてフロントエンドおよびサーバサイドでの実装が必要である.
 プログレッシブダウンロードの動作概要は,まず,1つのファイルを複数のあるサイズのブロックに分割する.
 次に,クライアントは分割されたブロックをサーバに対してリクエストする.
 サーバはリクエストに応じたブロックを送信する.
 これを繰り返すことで,1つのファイルを取得できる.
 このリクエストの方法の1つにHTTPのRange-Headerに分割のための情報を含める方式がある.
 この方式はRange-Headerに対応したHTTPサーバがあれば利用が可能である.
-他にもHTTPのGETリクエストのクエリストリングに分割のための情報を含める方式や,HLSやMPEG-DASH等で用いられている事前にファイル情報が書き込まれたファイルを取得し,分割済みのファイルの一部をリクエストする方式などがある.
+他にもHTTPのGETリクエストのクエリストリングに分割のための情報を含める方式や,HLSやMPEG-DASH等で用いられている事前にファイル情報が書き込まれたファイルを取得し,事前に分割済みのファイルをリクエストする方式などがある.
 
 \begin{figure}[h]
 	\centering
-	\includegraphics[width=16cm]{figure/p-dl.pdf}
+	\includegraphics[width=17.5cm]{figure/p-dl.pdf}
 	\caption{プログレッシブダウンロードの模式図}
 	\label{p-dl}
 \end{figure}
@@ -153,10 +206,12 @@ HTTPを利用したストリーミング方式としてはHLS(HTTP LiveStreaming
 
 \begin{figure}[h]
 	\centering
-	\includegraphics[width=17cm]{figure/block.pdf}
+	\includegraphics[width=16cm]{figure/block.pdf}
 	\caption{ブロックの有効性}
 	\label{block}
 \end{figure}
+
+\newpage
 
  %%%%%%%%%%%%%
  \section{重複再要求}
@@ -314,7 +369,7 @@ TCPのウィンドウサイズがネットワーク状況に応じて変化す�
 各接続における初期リクエスト-レスポンスさえ終了してしまえば,そこからは性能計測は差分予測の役割になる.
 つまり,応答遅延時間から最悪ケースとして冗長的にTCP接続の性能を見積もることで,ユーザー体験の悪化を防ぐことが目的である.
 
-\subsubsection{算出}
+\subsubsection{算出アルゴリズム}
 初期遅延度は各TCP接続において計測したHEAD リクエストの応答時間と,すべてのTCP接続の応答時間の最小値との比に初期遅延予測係数を掛けることで算出する.
 以下に疑似コードを示す.
 
@@ -341,13 +396,15 @@ TCPのウィンドウサイズがネットワーク状況に応じて変化す�
 \section{提案手法の実装}
 提案手法を実装したプログラムの概要を説明する.
 実装はPythonで行った.
-まず,ユーザーは複数のホストのURL,分割サイズ等を引数とするオブジェクトを生成する.
-プログラムはURLが有効であるかをHTTP HEADリクエストを用いて確認する.
+まず,ユーザーは複数のホストのURL,分割サイズ等を引数とするダウンローダーオブジェクトを生成する.
+ダウンローダーオブジェクトの生成時に,オプション引数を利用して重複再要求機能のON/OFF切り替えや,
+遅延要求アルゴリズムの選択が可能である.
+コンストラクタはURLが有効であるかをHTTP HEADリクエストを用いて確認する.
 入力された分割サイズを元にブロック1個あたりのバイト数を決定し,
 HTTP-Range リクエストに必要なヘッダーを生成してスレッドセーフなキューに保管する.
 便宜上キューと呼称しているが、
 このキューは任意の位置のデータを取り出すことのできるように改良してある.
-次にホストとの接続を確立する.
+最後にホストとの接続を確立する.
 ここでは既存のHTTPライブラリをセッション層に利用している.
 ここまでがコンストラクタである.
 ユーザーがダウンロード開始メソッドを呼び出すと,ホスト数だけの子スレッドを起動する.
@@ -355,9 +412,9 @@ HTTP-Range リクエストに必要なヘッダーを生成してスレッドセ
 ブロックの受信が終了したらスレッド共有のメモリ上に保管したのち親スレッドに通知を送信するという作業を繰り返す.
 親スレッドはユーザーからのデータの読み出しがあった場合,共有メモリを確認してその時点で順序が揃った部分を連結してユーザーに返却する.
 このときユーザーに返却すべきデータがバッファ内に存在しない場合,子スレッドからの通知を待つ.
-この返却についてはイテレータを利用することで,
+この返却についてはイテレータを利用することで,大容量ファイルのダウンロードにおいても,
 ユーザーは任意のタイミングで順序の揃った部分を読み出すことができる.
-図\ref{sphttp}に提案手法についての概要を示す.
+図\ref{sphttp}に提案手法とユーザー,HTTPとの関係について示す.
 
 %\clearpage
 
@@ -365,83 +422,49 @@ HTTP-Range リクエストに必要なヘッダーを生成してスレッドセ
 	\label{sphttp}
 	\begin{center}
 		\includegraphics[width=15cm]{figure/sphttp.pdf}
-		\caption{提案手法についての図}
+		\caption{提案手法とユーザー,HTTPとの関係}
 	\end{center}
 \end{figure}
 
 \clearpage
 
-
-\section{評価対象}
-本評価では重複再要求方式として\ref{juhuku}を改良し非有効ブロックの受信回数を閾値として用いる.
-これは実装上の都合であり,関連研究のアルゴリズムとは若干異なるが本研究では重複再要求の実装方式を比較することは目的としない.
-既に重複再要求方式の有効性は先行研究において確認されているので,全ての実験は重複再要求を行うことを前提としている.
-また,取得するファイルは映像と音声合わせてビットレートが40Mbpsで長さが150秒の動画の取得を仮定し,
+\section{実験環境}
+本節では本章での評価のための実験を行なった環境について説明する.
+また,実験においてダウンロードするファイルは映像と音声合わせてビットレートが40Mbpsで長さが150秒の動画の取得を仮定し,
 公開ネットワーク上でも容易に実験が可能である754MByteのUbuntuのリリースイメージファイルを選択した.
 
-\section{評価項目}
-\label{hyoukakoumoku}
-本節では本章で行う実験で評価する評価値について整理する.
-表\ref{hyoka}に評価項目についてまとめる.
-初期バッファリング時間とは,ブロックの理想的な到達時刻からどのくらい遅れているかか表す遅延時間の最大値である.
-動画再生を想定して言い換えると,獲得できたグッドプットを維持しながら停止せずに再生するために必要な再生開始時の待ち時間だと言える.
-非有効ブロック数はバッファ内において,取得できたのにもかかわらず再生不可能なブロックの数である.
-平均遅延時間は理想的なブロック到着時刻からの正の遅延時間の平均値である.
-初期バッファリング時間と平均遅延時間についての模式図を図\ref{buf}に示す.
-
-\newpage
-
-\begin{table}[htb]
-	\begin{center}
-		\caption{評価項目}
-		\label{hyoka}
-		\begin{tabular}{|c|c|} \hline
-			評価項目 & 概要　\\ \hline \hline
-			初期バッファリング時間 & 初期バッファリングに必要な時間 \\ \hline
-			平均非有効ブロック数 & バッファ内の非有効ブロックの数の平均値 \\ \hline
-			平均遅延時間 & 理想的なブロック到着時刻からの遅延時間の平均値 \\ \hline
-		\end{tabular}
-	\end{center}
-\end{table}
-
-\begin{figure}[ht]
-	\label{buf}
-	\begin{center}
-		\includegraphics[width=17cm]{figure/initialBuffering.pdf}
-		\caption{初期バッファリング時間と平均遅延時間の模式図}
-	\end{center}
-\end{figure}
-
-\clearpage
-
-\section{テストベッドでの評価}
+\subsection{テストベッド環境}
 \label{testbed}
-\ref{networkmodel}にテストベッドのネットワーク環境を示す.
+図\ref{networkmodel}にテストベッドのネットワーク環境,表\ref{env}に実験に用いたソフトウェア等の情報,実験パラメータを表\ref{param}に示す.
 TCP接続A-TCP接続B間の性能差は3倍,TCP接続A-TCP接続C間の性能差は10倍である.
-\begin{figure}[ht]
-	\label{networkmodel}
-	\begin{center}
-		\includegraphics[width=16cm]{figure/test_network.pdf}
-		\caption{ネットワーク環境}
-	\end{center}
-\end{figure}
-
-実験環境および実験パラメータを表\ref{env},表\ref{param}に示す.
 
 \begin{table}[htb]
 	\begin{center}
-		\caption{実験環境}
+		\caption{実験に用いたソフトウェア等}
 		\label{env}
 		\begin{tabular}{|c|c|} \hline
-			ファイルサイズ & 754MByte\\ \hline
-			ファイル &  ubuntu-17.10.1-server-amd64.iso\\ \hline
 			OS(Server and Client) & ubuntu 17.10 (Kernel 4.13)\\ \hline
 			TCP & CUBIC \\ \hline
 			HTTP Server & h2o v2.2.4 \\ \hline
 		\end{tabular}
+	\end{center}
+\end{table}
+
+\begin{figure}[h]
+	\centering
+	\label{networkmodel}
+	\includegraphics[width=16cm]{figure/test_network.pdf}
+	\caption{ネットワーク環境}
+\end{figure}
+
+\begin{table}[htb]
+	\begin{center}
 		\caption{実験パラメータ}
 		\label{param}
 		\begin{tabular}{|c|c|} \hline
+			パラメータ & 値\\ \hline \hline
+			ファイルサイズ & 754MByte\\ \hline
+			ファイル &  ubuntu-17.10.1-server-amd64.iso\\ \hline
 			ブロックサイズ & \(10^6\) Byte\\ \hline
 			初期遅延予測係数 & 10 \\ \hline
 			重複再要求発行閾値 & 20 \\ \hline
@@ -450,59 +473,14 @@ TCP接続A-TCP接続B間の性能差は3倍,TCP接続A-TCP接続C間の性能差
 	\end{center}
 \end{table}
 
-図\ref{ibt}は遅延要求のアルゴリズムごとの初期バッファリング時間である.
-図\ref{nsb}は遅延要求のアルゴリズムごとの平均非有効ブロック数である.
-図\ref{adt}は遅延要求のアルゴリズムごとの平均遅延時間である.
-また,評価値はすべて10回試行の平均である.
-DIFF-Falseは初期遅延予測を行わない差分計測を用いた遅延要求方式,DIFF-Trueは初期遅延予測を行う差分計測を用いた遅延要求方式,NORMALは常時最若番を要求する方式(重複再要求のみ),STATICはTCP接続間の性能差を入力する固定遅延要求方式である.
+\newpage
 
-\begin{figure}[h]
-	\centering
-	\includegraphics[width=13.5cm]{figure/InitialBufferingTimeTB.pdf}
-	\caption{初期バッファリング時間}
-	\label{ibt}
-\end{figure}
-
-\begin{figure}[h]
-	\begin{center}
-		\begin{tabular}{cc}
-			\begin{minipage}[t]{0.9\hsize}
-				\includegraphics[width=13cm]{figure/NumberofBlocksStayinginBufferTB.pdf}
-				\caption{平均非有効ブロック数}
-				\label{nsb}
-			\end{minipage}\\ \\
-			\begin{minipage}[t]{0.9\hsize}
-				\includegraphics[width=13cm]{figure/AverageDelayTimeTB.pdf}
-				\caption{平均遅延時間}
-				\label{adt}
-			\end{minipage}\\
-		\end{tabular}
-	\end{center}
-\end{figure}
-
-\clearpage
-
-図\ref{ibt}より,初期遅延予測が初期バッファリング時間に与える影響が大きいことが確認できる.
-このテストベッドにおける理想的な値である固定遅延要求方式の値に近い値を獲得しており,
-また固定遅延要求方式における初期バッファリング時間は,
-最も高性能な接続における応答時間とも言い換えることができるので,
-理論的に可能な限り初期バッファリング時間を削減していると言える.
-
-図\ref{nsb}より,差分計測を用いた遅延要求方式は非有効ブロック数を大幅に削減することができている.
-初期遅延予測を行わない場合は,初期リクエスト時において非有効ブロックが生じていることも確認できる.
-
-図\ref{adt}より,平均遅延時間についても,固定遅延要求方式とほぼ同等の値が得られており,
-応答性の向上が確認できる
-
-また,本テストベッド環境では遅延要求の有無にかかわらず,重複再要求を行うほどの遅延は発生していない.
-\clearpage
-
-\section{公開ネットワークでの評価}
+\subsection{公開ネットワーク環境}
 \label{pub}
 公開ネットワークでの評価にあたり,Ubuntuのリリースイメージファイルの配布に用いられている公開ミラー\cite{ubuntu}を利用した.
 実験には国内2ヶ所,国外7ヶ所の計9ヶ所のミラーを利用した
 表\ref{tablemirror}に使用した公開ミラーを示す.
-また,参考として各公開ミラーの24時間の性能変化について図\ref{24h}に示す.実験の際にダウンロードしたファイルおよび実験パラメータはテストベッドのものと同一である.
+また,参考として各公開ミラーの24時間の性能変化について図\ref{24h}に示す.実験の際にダウンロードしたファイルおよび実験パラメータは表\ref{param}である.
 \begin{table}[h]
 	\begin{center}
 		\caption{使用した公開ミラー一覧}
@@ -530,6 +508,158 @@ DIFF-Falseは初期遅延予測を行わない差分計測を用いた遅延要�
 
 \newpage
 
+\section{重複再要求方式の検討}
+本節では本研究で選択する重複再要求方式についての検討を行う.
+先行研究\cite{proxy}より,重複再要求の発行回数が増加すると冗長な帯域の利用が発生し,
+スループットが悪化することはすでに判明している.
+
+\subsection{検討したアルゴリズム}
+実装の際に検討したアルゴリズムを表\ref{dupalgo}に示す.
+なお実験は\ref{pub}節で示した公開ネットワークで行い,実験パラメータは表\ref{param}に示す.
+
+\begin{table}[htb]
+	\begin{center}
+		\caption{検討した重複再要求アルゴリズム}
+		\label{dupalgo}
+		\scalebox{0.85}{
+			\begin{tabular}{|c|l|} \hline
+				方式 & 閾値と比較する値　\\ \hline \hline
+				A & 先行研究と同様にバッファ内の非有効ブロック数 \\ \hline
+				B & 非有効ブロックの受信回数(ブロックをユーザーへ返却できたときに受信回数を0リセット) \\ \hline
+				C & Bと同様(ブロックをユーザーへ返却できたときに受信回数を返却ブロック数だけ減算) \\ \hline
+		\end{tabular}}
+	\end{center}
+\end{table}
+
+\clearpage
+
+\subsection{実験結果}
+\label{dupA}
+本研究でも重複再要求の発行回数とスループットの劣化の関係を確認する実験を行い,その結果を表\ref{duptime},図\ref{dupthp}に示す.
+\begin{table}[htb]
+	\begin{center}
+		\caption{重複再要求発行回数}
+		\label{duptime}
+		\begin{tabular}{|c|c|c|} \hline
+			アルゴリズム& 平均重複再要求発行回数 & 平均スループット [Mbps]　\\ \hline \hline
+			None(重複再要求なし) & 0 & 69.384 \\ \hline
+			A & 9.3 & 69.390 \\ \hline
+			B & 64.6 & 65.254\\ \hline
+			C & 297.7 & 52.493 \\ \hline
+		\end{tabular}
+	\end{center}
+\end{table}
+
+\begin{figure}[ht]
+	\label{dupthp}
+	\begin{center}
+		\includegraphics[width=13cm]{figure/put.pdf}
+		\caption{検討した重複再要求アルゴリズムにおける平均スループット}
+	\end{center}
+\end{figure}
+
+表\ref{duptime},\ref{dupthp}より,分割数に対する重複再要求発行回数が多くなるに連れてスループットが劣化することが改めて確認できる.
+多重接続で獲得したスループットを最大限活用するために,
+以降本研究では最もスループット劣化の小さいAを重複再要求アルゴリズムとして採用する.
+
+\newpage
+
+\section{遅延要求方式の評価}
+本節では遅延要求方式の評価を行う.
+既に重複再要求方式の有効性は先行研究において確認されているので,全ての実験は\ref{dupA}で決定した重複再要求機能を有効にして行う.
+
+\subsection{評価項目}
+\label{hyoukakoumoku}
+本節では本章で行う実験で評価する評価値について整理する.
+表\ref{hyoka}に評価項目についてまとめる.
+初期バッファリング時間とは,ブロックの理想的な到達時刻からどのくらい遅れているかか表す遅延時間の最大値である.
+動画再生を想定して言い換えると,獲得できたグッドプットを維持しながら停止せずに再生するために必要な再生開始時の待ち時間だと言える.
+非有効ブロック数はバッファ内において,取得できたのにもかかわらず再生不可能なブロックの数である.
+平均遅延時間は理想的なブロック到着時刻からの正の遅延時間の平均値である.
+初期バッファリング時間と平均遅延時間についての模式図を図\ref{buf}に示す.
+
+\newpage
+
+\begin{table}[htb]
+	\begin{center}
+		\caption{評価項目}
+		\label{hyoka}
+		\begin{tabular}{|c|c|} \hline
+			評価項目 & 概要　\\ \hline \hline
+			初期バッファリング時間 & 初期バッファリングに必要な時間 \\ \hline
+			平均非有効ブロック数 & バッファ内の非有効ブロックの数の平均値 \\ \hline
+			平均遅延時間 & 理想的なブロック到着時刻からの正の遅延時間の平均値 \\ \hline
+		\end{tabular}
+	\end{center}
+\end{table}
+
+\begin{figure}[ht]
+	\begin{center}
+		\label{buf}
+		\includegraphics[width=17cm]{figure/initialBuffering.pdf}
+		\caption{初期バッファリング時間と平均遅延時間の模式図}
+	\end{center}
+\end{figure}
+
+\clearpage
+
+\subsection{テストベッドでの評価}
+実験環境および実験パラメータは\ref{env}節で示したとおりである.
+また,評価値はすべて10回試行の平均である.
+
+\subsubsection{実験結果}
+DIFF-Falseは初期遅延予測を行わない差分計測を用いた遅延要求方式,DIFF-Trueは初期遅延予測を行う差分計測を用いた遅延要求方式,NORMALは常時最若番を要求する方式(重複再要求のみ),STATICはTCP接続間の性能差を入力する固定遅延要求方式である.
+図\ref{ibt}に初期バッファリング時間,
+図\ref{nsb}に平均非有効ブロック数,
+図\ref{adt}に平均遅延時間を示す.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=13.5cm]{figure/InitialBufferingTimeTB.pdf}
+	\caption{初期バッファリング時間}
+	\label{ibt}
+\end{figure}
+
+\begin{figure}[h]
+	\begin{center}
+		\begin{tabular}{cc}
+			\begin{minipage}[t]{0.9\hsize}
+				\includegraphics[width=13cm]{figure/NumberofBlocksStayinginBufferTB.pdf}
+				\caption{平均非有効ブロック数}
+				\label{nsb}
+			\end{minipage}\\ \\
+			\begin{minipage}[t]{0.9\hsize}
+				\includegraphics[width=13cm]{figure/AverageDelayTimeTB.pdf}
+				\caption{平均遅延時間}
+				\label{adt}
+			\end{minipage}\\
+		\end{tabular}
+	\end{center}
+\end{figure}
+
+\clearpage
+
+\subsubsection{考察}
+図\ref{ibt}より,初期遅延予測が初期バッファリング時間に与える影響が大きいことが確認できる.
+このテストベッドにおける理想的な値である固定遅延要求方式の値に近い値を獲得しており,
+また固定遅延要求方式における初期バッファリング時間は,
+最も高性能な接続における応答時間とも言い換えることができるので,
+理論的に可能な限り初期バッファリング時間を削減していると言える.
+
+図\ref{nsb}より,差分計測を用いた遅延要求方式は非有効ブロック数を大幅に削減することができている.
+初期遅延予測を行わない場合は,初期リクエスト時において非有効ブロックが生じていることも確認できる.
+
+図\ref{adt}より,平均遅延時間についても,固定遅延要求方式とほぼ同等の値が得られており,
+応答性の向上が確認できる
+
+また,本テストベッド環境では遅延要求の有無にかかわらず,重複再要求を行うほどの遅延は発生していない.
+\clearpage
+
+\subsection{公開ネットワークでの評価}
+実験環境および実験パラメータは\ref{env}節で示したとおりである.
+また,評価値はすべて10回試行の平均である.
+
+\subsubsection{実験結果}
 公開ミラーを利用した実験の結果を図\ref{ibtpub},図\ref{nsbpub}および図\ref{adtpub}に示す.
 DIFF-Falseは初期遅延予測を行わない差分計測を用いた遅延要求方式,DIFF-Trueは初期遅延予測を行わない差分計測を用いた遅延要求方式,NORMALは常時最若番を要求する方式(重複再要求のみ),STATICはTCP接続間の性能差を入力する固定遅延要求方式である.
 また,10回のすべての試行での各ブロック番号の到着時における非有効ブロック数と遅延時間をプロットしたものを図\ref{allnsb},図\ref{alladt}に示す.
@@ -601,6 +731,7 @@ DIFF-Falseは初期遅延予測を行わない差分計測を用いた遅延要�
 
 \clearpage
 
+\subsubsection{考察}
 図\ref{ibtpub}〜図\ref{adtpub}より,
 提案方式はネットワーク環境についての情報を事前に入力することができない未知の公開ネットワークにおいても,従来方式よりも初期バッファリング時間の削減,非有効ブロック数の削減,平均遅延時間の短縮を確認することができる.
 図\ref{ibtpub}より,初期遅延予測を有効にしていない提案方式では初期バッファリング時間がそれほど改善していないことがわかる.
@@ -620,12 +751,12 @@ DIFF-Falseは初期遅延予測を行わない差分計測を用いた遅延要�
 非有効ブロック数がブロック番号200近辺まで0にならないのは初期遅延予測において,
 実際の性能差以上に後方のブロックを要求した結果,
 そのブロックが非有効ブロックとしてバッファ中に滞留し続けているためである.
-\ref{alladt}において従来方式の点の個数が提案方式よりも少なく見えるのは,
+図\ref{alladt}において従来方式の点の個数が提案方式よりも少なく見えるのは,
 負の遅延時間の点をプロットしていないためである.
 
-\ref{tpdnpub}における到着時刻の点の集合よりも\ref{tpddpub}における到着時刻の点の集合が,
+図\ref{tpdnpub}における到着時刻の点の集合よりも図\ref{tpddpub}における到着時刻の点の集合が,
 より細い直線に近づいていることからも,到着順序逆転が減少していることがわかる.
-\ref{tpddpub}において初期に比較的後方のブロックが到着しているのは,
+図\ref{tpddpub}において初期に比較的後方のブロックが到着しているのは,
 初期遅延予測によるものである.
  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -651,7 +782,7 @@ DIFF-Falseは初期遅延予測を行わない差分計測を用いた遅延要�
 今後の課題として,実際のユーザー体験(QoE)を考慮した評価\cite{future},
 先行研究であるタイマ駆動方式の実装と評価,実装における並列処理の最適化,
 TCP接続の性能差を要求順序ではなくブロックサイズに反映する要求方式の実装評価などが挙げられる.
-なお,QoEを考慮した評価のためのプロキシサーバの実装は既に完了している(付録参照).
+なお,QoEを考慮した評価のためのプロキシサーバの実装は既に完了している(付録\ref{sphttp-proxy}).
 実装の最適化についてはPythonではGIL(Global Interpriter Lock)が存在するため,
 CPUコア数を最大限に活用した実装については他の言語の使用が望ましいといえる.
 
@@ -671,51 +802,59 @@ CPUコア数を最大限に活用した実装については他の言語の使�
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{flushleft}
 \begin {thebibliography}{20} 
-	\bibitem{proxy}
-	Junichi Funasaka, Atsushi Kawano, and Kenji Ishida: Adaptive Parallel Downloading Method for Proxy Systems, IEICE Trans., Vol.E90-B, No.4, pp.720-727, Apr. 2007.
-	
-	\bibitem{hiraoka}
-	Tokumasa Hiraoka and Junichi Funasaka: A Progressive Download Method Using Multiple TCP Flows on Multiple Paths, Proc. 10th International Conference on Broadband and Wireless Computing, Communication and Applications (BWCCA 2015), pp.318-324, Nov. 2015. 
-	
-	\bibitem{horiba}
-	Hiroaki Horiba, Tokumasa Hiraoka, and Junichi Funasaka: A Progressive Download Method Based on Timer-Driven Requesting Schemes Using Multiple TCP Flows on Multiple Paths, Proc. 37th IEEE ICDCS Workshops, pp.26-31, Jun. 2017.
-	
-	\bibitem{mhttp}
-	Juhoon Kim, Yung-Chih Chen, Ramin Khalili, Don Towsley, Anja Feldmann,
-	"Multi-source Multipath HTTP (mHTTP): A Proposal,"
-	ACM SIGMETRICS Performance Evaluation Review, vol. 42, No. 1, pp.583--584, 2014.
-	
-	\bibitem{future}
-	M. N. Garcia, D. Dytko and A. Raake, "Quality impact due to initial loading, stalling, and video bitrate in progressive download video services," Proc. 2014 Sixth International Workshop on Quality of Multimedia Experience (QoMEX), pp. 129-134, 2014.
-	
-	\bibitem{youtube}
-	Youtube.available at https://www.youtube.com,2018.
-	
-	\bibitem{netflix}
-	Netflix.available at https://www.netflix.com,2018.
-	
-	\bibitem{ubuntu}
-	Official CD Mirrors for Ubuntu.available at https://launchpad.net/ubuntu/+cdmirrors, 2018.
-	
-	\bibitem{vlc}
-	VLC.available at　https://www.videolan.org/index.html, 2018.
-	
-	\bibitem{hls}
-	Apple Inc., "HTTP Live Streaming (HLS) - Apple Developer", https://developer.apple.com/streaming/
-	
-	\bibitem{dash}
-	ISO org., "ISO/IEC 23009-1:2014 - Information technology -- Dynamic adaptive streaming over HTTP (DASH) -- Part 1: Media presentation description and segment formats", https://www.iso.org/standard/65274.html
+\bibitem{proxy}
+Junichi Funasaka, Atsushi Kawano, and Kenji Ishida: Adaptive Parallel Downloading Method for Proxy Systems, IEICE Trans., Vol.E90-B, No.4, pp.720-727, Apr. 2007.
+
+\bibitem{hiraoka}
+Tokumasa Hiraoka and Junichi Funasaka: A Progressive Download Method Using Multiple TCP Flows on Multiple Paths, Proc. 10th International Conference on Broadband and Wireless Computing, Communication and Applications (BWCCA 2015), pp.318-324, Nov. 2015. 
+
+\bibitem{horiba}
+Hiroaki Horiba, Tokumasa Hiraoka, and Junichi Funasaka: A Progressive Download Method Based on Timer-Driven Requesting Schemes Using Multiple TCP Flows on Multiple Paths, Proc. 37th IEEE ICDCS Workshops, pp.26-31, Jun. 2017.
+
+\bibitem{mhttp}
+Juhoon Kim, Yung-Chih Chen, Ramin Khalili, Don Towsley, Anja Feldmann,
+"Multi-source Multipath HTTP (mHTTP): A Proposal,"
+ACM SIGMETRICS Performance Evaluation Review, vol. 42, No. 1, pp.583--584, 2014.
+
+\bibitem{future}
+M. N. Garcia, D. Dytko and A. Raake, "Quality impact due to initial loading, stalling, and video bitrate in progressive download video services," Proc. 2014 Sixth International Workshop on Quality of Multimedia Experience (QoMEX), pp. 129-134, 2014.
+
+\bibitem{streaming}
+Ali C. Begen, Tankut Akgul, and Mark Baugher, ``Watching Video over the Web - Part I: Streaming
+Protocols,'' IEEE Internet Computing, Vol.15, No.2, pp.54--63, 2011.
+
+\bibitem{youtube}
+Youtube.available at https://www.youtube.com,2018.
+
+\bibitem{netflix}
+Netflix.available at https://www.netflix.com,2018.
+
+\bibitem{ubuntu}
+Official CD Mirrors for Ubuntu.available at https://launchpad.net/ubuntu/+cdmirrors, 2018.
+
+\bibitem{vlc}
+VLC.available at　https://www.videolan.org/index.html, 2018.
+
+\bibitem{hls}
+Apple Inc., "HTTP Live Streaming (HLS) - Apple Developer", https://developer.apple.com/streaming/
+
+\bibitem{dash}
+ISO org., "ISO/IEC 23009-1:2014 - Information technology -- Dynamic adaptive streaming over HTTP (DASH) -- Part 1: Media presentation description and segment formats", https://www.iso.org/standard/65274.html
 \end {thebibliography}
 \end{flushleft}
 
 \begin{appendix}
-	\chapter{}\label{appendix}
-	\section{提案手法を実装したHTTPクライアント}
-	\label{github}
+	\label{appendix}
+	\chapter{提案手法を実装したHTTPクライアント}
+	提案手法を実装したHTTPクライアントのソースコードは以下のURLのリポジトリで公開している.\\
 	https://github.com/johejo/sphttp/
-	\section{\ref{github}をnginxおよびuwsgiと連携させたプロキシサーバ}
-	https://github.com/johejo/sphttp-proxy
-	\newpage
+	
+	\chapter{プロキシサーバ}
+	実装したHTTPクライアントをWSGI(Web Server Gateway Interface)を用いてWebサーバと連携させるためののソースコードは以下のURLのリポジトリで公開している.\\
+	https://github.com/johejo/sphttp-proxy/ \\ \\
+	リバースプロキシとしてnginx,WSGIサーバーとしてuwsgi,Webフレームワークとしてflaskを使用した簡易プロキシサーバのDockerイメージは以下のURLから利用可能である.\\
+	https://hub.docker.com/r/johejo/sphttp-proxy/ \\
+	
 \end{appendix}
 
 \end{document}
