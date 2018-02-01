@@ -4,12 +4,14 @@ language: bash
 
 notifications:
   email:
-      - mitsuo_h@outlook.com
+    - heijo@net.info.hiroshima-cu.ac.jp
+  on_success: always
+  on_failure: never
 
 addons:
-    apt:
-        packages:
-            - curl
+  apt:
+    packages:
+      - curl
 
 before_install:
     - docker run --name latex -itd -v $PWD:/workdir johejo/debian-latex-jp:latest

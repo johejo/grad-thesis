@@ -208,7 +208,7 @@ HTTPを利用したストリーミング方式としてはHLS(HTTP LiveStreaming
 \ref{kotei}節では各接続の帯域が既知であるいう仮定に基づいて,TCP接続の性能差を入力し,ブロックの要求位置を変化させることで到着順序逆転の抑制する方式について提案する.
 \ref{diff}節では未知のネットワーク状況に対応するためにTCP接続の使用回数の差分に注目しブロックの遅延度を推測する方式について提案する.
 また,本研究では各TCP接続には同時に最大でも1つのHTTP リクエスト-レスポンスしか発行しない.
-つまりタイマ駆動方式など用いられているHTTP-パイプラインは用いず,受信駆動モデルで実装を行う.
+タイマ駆動方式など用いられているHTTP-パイプラインは使用しない.
 
 \newpage
 
@@ -351,7 +351,7 @@ HTTP-Range リクエストに必要なヘッダーを生成してスレッドセ
 各子スレッドはファイル全体が揃うまでキューからヘッダーをとりだして各ホストに要求を送信し,
 ブロックの受信が終了したらスレッド共有のメモリ上に保管したのち親スレッドに通知を送信するという作業を繰り返す.
 親スレッドはユーザーからのデータの読み出しがあった場合,共有メモリを確認してその時点で順序が揃った部分を連結してユーザーに返却する.
-このときユーザーに返却すべきデータが存在しない場合,子スレッドからの通知を待つ.
+このときユーザーに返却すべきデータがバッファ内に存在しない場合,子スレッドからの通知を待つ.
 この返却についてはイテレータを利用することで,
 ユーザーは任意のタイミングで順序の揃った部分を読み出すことができる.
 図\ref{sphttp}に提案手法についての概要を示す.
@@ -455,7 +455,7 @@ DIFF-Falseは初期遅延予測を行わない差分計測を用いた遅延要�
 
 \begin{figure}[h]
 	\centering
-	\includegraphics[width=13.5cm]{figure/InitialBufferingTime.pdf}
+	\includegraphics[width=13.5cm]{figure/InitialBufferingTimeTB.pdf}
 	\caption{初期バッファリング時間}
 	\label{ibt}
 \end{figure}
@@ -464,12 +464,12 @@ DIFF-Falseは初期遅延予測を行わない差分計測を用いた遅延要�
 	\begin{center}
 		\begin{tabular}{cc}
 			\begin{minipage}[t]{0.9\hsize}
-				\includegraphics[width=13cm]{figure/NumberofBlocksStayinginBuffer.pdf}
+				\includegraphics[width=13cm]{figure/NumberofBlocksStayinginBufferTB.pdf}
 				\caption{平均非有効ブロック数}
 				\label{nsb}
 			\end{minipage}\\ \\
 			\begin{minipage}[t]{0.9\hsize}
-				\includegraphics[width=13cm]{figure/AverageDelayTime.pdf}
+				\includegraphics[width=13cm]{figure/AverageDelayTimeTB.pdf}
 				\caption{平均遅延時間}
 				\label{adt}
 			\end{minipage}\\
