@@ -164,7 +164,7 @@
 \hspace*{\fill}指導教員名\rule[-6mm]{0mm}{15mm}\hspace*{\fill}
 \end{minipage} \\
 \hline
-\rule[-6mm]{0mm}{15mm}& & & \large\dg\bf\@supervisor\\
+\rule[-6mm]{0mm}{15mm} 35 & 2/2 & & \large\dg\bf\@supervisor\\
 \hline
 \end{tabular}
 \end {center}
@@ -270,7 +270,7 @@
 %%%
 \let\myappendix\appendix
 \def\appendix{
-\def\chaptername##1{}
+\def\chaptername{}
   \newpage
   \addtocontents{toc}{\protect\contentsline{chapter}%
      {\hbox to\@tempdima {\hfil }付録}{\ }}%

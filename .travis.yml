@@ -4,7 +4,7 @@ language: bash
 
 notifications:
   email:
-    - heijo@net.info.hiroshima-cu.ac.jp
+    - funa@hiroshima-cu.ac.jp
   on_success: always
   on_failure: never
 
