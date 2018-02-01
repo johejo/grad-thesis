@@ -7,7 +7,7 @@ readonly BUILD_DIR=build
 
 ./clean.sh
 
-for i in `seq 2`
+for i in `seq 3`
 do
     $LATEX $PROJECT.tex
 done
