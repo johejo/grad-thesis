@@ -27,7 +27,7 @@
 %
 \jtitle{TCP並列接続を用いたプログレッシブダウンロード\\における順序制御方式の実装} % 和文題目
 %
-\etitle{Implementation of sequence control method in progressive download using parallel TCP connections} % 英文題目
+\etitle{Implementation of Sequence Control Method in Progressive Download Using Parallel TCP Connections} % 英文題目
 %
 \jaffil{広島市立大学 情報科学部 情報工学科}
 \eaffil{Department of Computer and Network Engineering\\
@@ -42,26 +42,27 @@ Hiroshima City University}
 %
 \jabst{ % 和文梗概 
 \hspace*{0.5em}
-近年,ネットワークインフラの整備とおよび動画像高画質化が進んでおり,Webコンテンツの大容量化が顕著である.
+近年,ネットワーク基盤の整備および動画像の高画質化が進んでおり,Webコンテンツの大容量化が顕著である.
 効率的なコンテンツの配信方法としてCDNを利用したコンテンツ分散配置やDNSのキャッシュサーバ単位で異なるIPアドレスを返すことによる広域負荷分散などがすでに運用されている.
 このように同一のコンテンツが様々な場所に配置されていることを利用し,複数のWebサーバと同時並行的に多重通信を行うことで,より高速で快適な通信を実現しようとする技術が様々な場所で開発および提案されている.
 性能の異なる複数のTCP接続を利用して同一のファイルを分割取得しながら利用する場合における既知の課題として,ブロックの到着順序逆転による応答性の悪化を防ぐことなどが挙げられる.
 本研究は,リクエスト送信時における能動的なHTTPプログレッシブダウンロード順序制御方式を提案し,到着順序逆転の抑制に取り組んだ.
-そして,テストベッドおよび公開ネットワーク上で提案手法が実装されたHTTPクライアントは評価した.
-テストベッドでの評価では,差分要求方式はTCP接続間の性能差を入力することなく固定遅延要求方式と同等の性能を獲得することができた.
-また,公開ネットワークでの評価では差分計測を用いた遅延予測方式は初期遅延予測方式と組み合わせることで制御なしの場合と比べて,50\%の初期バッファリング時間の削減,50\%の非有効ブロック数の削減と30\%の平均遅延時間の削減が確認できた.
+そして,テストベッドおよび公開ネットワーク上で提案手法が実装されたHTTPクライアントを評価した.
+テストベッドでの評価では,サーバ性能の観測値に基づく動的ブロック番号選択方式はTCP接続間の性能差を入力することなく静的ブロック番号選択方式と同等の性能を獲得することができた.
+また,公開ネットワークでの評価において初期遅延予測方式とサーバ性能の観測値に基づく動的ブロック番号選択方式の組み合わせは重複再要求のみの場合と比較して,50\%の初期バッファリング時間の削減,50\%の非有効ブロック数の削減および30\%の平均遅延時間の削減が確認できた.
 } %
 
 \eabst{ % 英文梗概
 \hspace*{1em}
-In recent years, the development of network infrastructure and the improvement of the quality of moving images have been advanced, and the increase in the capacity of Web contents is remarkable.
+In recent years, the development of network infrastructure and the improvement of the quality of video have been advanced, and the increase in the capacity of Web contents is remarkable.
 Duplicated replicas supported by content distribution network (CDN) and wide area load dispersion by returning different IP addresses against DNS (Domain Name System) queries for a fully qualified domain name are already in operation.
-By utilizing the fact that the same contents are arranged in various places and performing multiplex communication concurrently with a plurality of web servers concurrently, there are various technologies to realize higher speed and comfortable communication Have been developed and proposed in places.
-As a known problem in utilizing a plurality of TCP connections having different performances while splitting and acquiring the same file, it is possible to prevent degradation of responsiveness due to block arrival order inversion.
+By utilizing the fact that the same contents are arranged in various places and performing multiplex communication with multiple web servers concurrently, there are various technologies to realize higher speed and comfortable communication have been developed and proposed in places.
+As a known problem in utilizing multiple TCP connections having different performances while splitting and acquiring the same file, it is possible to prevent degradation of responsiveness due to block arrival order inversion.
 In this research, active HTTP progressive download order control method at request transmission was proposed, and suppression of arrival order inversion was attempted.
 Evaluation of the HTTP client on which the proposed method was implemented on the test bed and the public network was conducted.
-In the test bed evaluation, the difference request method was able to acquire the same performance as the fixed delay request method without inputting the performance difference between the TCP connections.
-Moreover, in the evaluation on the public network, the delay prediction method using the difference measurement combined with the initial delay prediction method reduces the initial buffering time by 50\%, the ineffectiveness of 50 \% Reducing the number of blocks and reducing the average delay time by 30\% was confirmed.
+In the test bed evaluation, dynamic block number selection method based on observed server performance values was able to acquire the same performance as the static block number selection method without inputting the performance difference between the TCP connections.
+Moreover, it was confirmed that dynamic block number selection method based on observed server performance values with initial delay prediction method　reduces the initial buffering time by 50\%, the number of out-of-order blocks by 50\%, and the average delay time by 30\% in the evaluation on the public network.
+%in the evaluation on the public network, the delay prediction method using dynamic block number selection method based on observed server performance values with the initial delay prediction method reduces the initial buffering time by 50\%, the ineffectiveness of 50 \% Reducing the number of blocks and reducing the average delay time by 30\% was confirmed.
 }
 \begin{document} 
 \maketitle %とびらの出力
@@ -301,14 +302,14 @@ HTTPを利用したストリーミング方式としてはHLS(HTTP LiveStreaming
     \label{delay}
 \end{figure}
 
-\subsection{固定遅延要求方式}
+\subsection{静的ブロック番号選択方式}
 \label{kotei}
-固定遅延方式は,予めTCP接続間の性能差をシステムに入力して遅延要求を行うことで到着順序逆転の抑制を試みる方式である.
+静的ブロック番号選択方式は,予めTCP接続間の性能差をシステムに入力して遅延要求を行うことで到着順序逆転の抑制を試みる方式である.
 しかし,実ネットワークでは予めTCP接続間の性能差が既知であることは稀であるので実環境への応用は限定的であると言わざるを得ない.
 よって本研究では本方式は主として,他の方式がどれだけTCP接続間の性能差を正確に把握できているかどうかを比較し確認するために用いる.
 詳細な動作については,\ref{chienyokyu}節で述べたとおりである.
 
-\subsection{差分計測を用いた遅延予測方式}
+\subsection{サーバ性能の観測値に基づく動的ブロック番号選択方式}
 \label{diff}
 当方式はあるTCP接続に対して何ブロック後ろのブロックを要求するかを算出するために,そのTCP接続の直前のブロック取得間隔を計測し用いる方式である.
 以下に疑似コードを示す.
@@ -368,7 +369,6 @@ TCPのウィンドウサイズがネットワーク状況に応じて変化す�
 しかし,仮に広帯域であっても高遅延なネットワークではTCPのウィンドウサイズが大きくなるまでに低遅延ネットワークよりも長い時間がかかる.
 また,初期ブロックの到着時刻がユーザ体験に与える影響は大きいと考えられる.
 よって初期リクエストの送信時に限って言えば,多少の性能予測が外れることは許容しても,低性能の可能性がある高遅延なTCP接続にはとにかく初期ブロックを要求させないことが,初期バッファリング時間の短縮につながる.
-各接続における初期リクエスト-レスポンスさえ終了してしまえば,そこからは性能計測は差分予測の役割になる.
 つまり,応答遅延時間から最悪ケースとして冗長的にTCP接続の性能を見積もることで,ユーザ体験の悪化を防ぐことが目的である.
 
 \subsubsection{算出アルゴリズム}
@@ -431,7 +431,7 @@ HTTP-Range リクエストに必要なヘッダを生成してスレッドセー
 \clearpage
 
 \section{実験環境}
-本節では本章での評価のための実験を行なった環境について説明する.
+本節では,評価のために行った実験環境について説明する.
 また,実験においてダウンロードするファイルは映像と音声合わせてビットレートが40Mbpsで長さが150秒の動画の取得を仮定し,
 公開ネットワーク上でも容易に実験が可能である754MByteのUbuntuのリリースイメージファイルを選択した.
 
@@ -612,7 +612,7 @@ TCP接続A-TCP接続B間の性能差は3倍,TCP接続A-TCP接続C間の性能差
 また,評価値はすべて10回試行の平均である.
 
 \subsubsection{実験結果}
-DIFF-Falseは初期遅延予測を行わない差分計測を用いた遅延要求方式,DIFF-Trueは初期遅延予測を行う差分計測を用いた遅延要求方式,NORMALは常時最若番を要求する方式(重複再要求のみ),STATICはTCP接続間の性能差を入力する固定遅延要求方式である.
+DIFF-Falseは初期遅延予測を行わないサーバ性能の観測値に基づく動的ブロック番号選択方式,DIFF-Trueは初期遅延予測を行うサーバ性能の観測値に基づく動的ブロック番号選択方式,NORMALは常時最若番を要求する方式(重複再要求のみ),STATICはTCP接続間の性能差を入力する静的ブロック番号選択方式である.
 また,本テストベッド環境では遅延要求の有無にかかわらず,重複再要求を行うほどの遅延は発生していない.
 図\ref{ibt}に初期バッファリング時間,
 図\ref{nsb}に平均非有効ブロック数,
@@ -646,15 +646,15 @@ DIFF-Falseは初期遅延予測を行わない差分計測を用いた遅延要�
 
 \subsubsection{考察}
 図\ref{ibt}より,初期遅延予測が初期バッファリング時間に与える影響が大きいことが確認できる.
-このテストベッドにおける理想的な値である固定遅延要求方式の値に近い値を獲得しており,
-また固定遅延要求方式における初期バッファリング時間は,
+このテストベッドにおける理想的な値である静的ブロック番号選択方式の値に近い値を獲得しており,
+また静的ブロック番号選択方式における初期バッファリング時間は,
 最も高性能な接続における応答時間とも言い換えることができるので,
 理論的に可能な限り初期バッファリング時間を削減していると言える.
 
-図\ref{nsb}より,差分計測を用いた遅延要求方式は非有効ブロック数を大幅に削減することができている.
+図\ref{nsb}より,サーバ性能の観測値に基づく動的ブロック番号選択方式は非有効ブロック数を大幅に削減することができている.
 初期遅延予測を行わない場合は,初期リクエスト時において非有効ブロックが生じていることも確認できる.
 
-図\ref{adt}より,平均遅延時間についても,固定遅延要求方式とほぼ同等の値が得られており,
+図\ref{adt}より,平均遅延時間についても,静的ブロック番号選択方式とほぼ同等の値が得られており,
 応答性の向上が確認できる
 
 \clearpage
@@ -666,7 +666,7 @@ DIFF-Falseは初期遅延予測を行わない差分計測を用いた遅延要�
 
 \subsubsection{実験結果}
 公開ミラーを利用した実験の結果を図\ref{ibtpub},図\ref{nsbpub}および図\ref{adtpub}に示す.
-DIFF-Falseは初期遅延予測を行わない差分計測を用いた遅延要求方式,DIFF-Trueは初期遅延予測を行わない差分計測を用いた遅延要求方式,NORMALは常時最若番を要求する方式(重複再要求のみ),STATICはTCP接続間の性能差を入力する固定遅延要求方式である.
+DIFF-Falseは初期遅延予測を行わないサーバ性能の観測値に基づく動的ブロック番号選択方式,DIFF-Trueは初期遅延予測を行わないサーバ性能の観測値に基づく動的ブロック番号選択方式,NORMALは常時最若番を要求する方式(重複再要求のみ),STATICはTCP接続間の性能を入力する静的ブロック番号選択方式である.
 また,10回のすべての試行での各ブロック番号の到着時における非有効ブロック数と遅延時間をプロットしたものを図\ref{allnsb},図\ref{alladt}に示す.
 加えて,典型的な受信の様子についてのグラフを図\ref{tpdnpub}および図\ref{tpddpub}に示す.
 \begin{figure}[h]
@@ -728,7 +728,7 @@ DIFF-Falseは初期遅延予測を行わない差分計測を用いた遅延要�
 		\begin{minipage}[t]{0.9\hsize}
 			\centering
 			\includegraphics[width=13cm]{figure/TypicalPlotDelay=DIFFInit=TrueDup=IBRC.pdf}
-			\caption{差分計測を用いた遅延要求をおこなった場合の受信の様子}
+			\caption{遅延要求有りの場合の受信の様子}
 			\label{tpddpub}
 		\end{minipage}
 	\end{tabular}
@@ -773,8 +773,8 @@ DIFF-Falseは初期遅延予測を行わない差分計測を用いた遅延要�
 本研究ではTCP接続を並列に用いたプログレッシブダウンロードにおいてTCP接続間に性能差が存在する場合に生じる問題点を解消する方式を提案し実装を行った.
 提案方式は,各TCP接続におけるブロックの到着間隔を計測することでそのTCP接続に遅延要求を行うことで到着順序の逆転を抑制する方式である.
 次に実装したプログラムをテストベッドおよびネットワーク環境が未知の公開ネットワーク上で動作させて評価を行った.
-テストベッドでの評価では,差分要求方式はTCP接続間の性能差を入力することなく固定遅延要求方式と同等の性能を獲得することができた.
-また,公開ネットワークでの評価では差分計測を用いた遅延予測方式は初期遅延予測方式と組み合わせることで制御なしの場合と比べて,50\%の初期バッファリング時間の削減,50\%の非有効ブロック数の削減と30\%の平均遅延時間の削減が確認できた.
+テストベッドでの評価では,サーバ性能の観測値に基づく動的ブロック番号選択方式はTCP接続間の性能差を入力することなく静的ブロック番号選択方式と同等の性能を獲得することができた.
+また,公開ネットワークでの評価では,サーバ性能の観測値に基づく動的ブロック番号選択方式は初期遅延予測と組み合わせることで制御なしの場合と比べて,50\%の初期バッファリング時間の削減,50\%の非有効ブロック数の削減と30\%の平均遅延時間の削減が確認できた.
 
 
 \section{今後の課題}
