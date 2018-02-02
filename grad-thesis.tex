@@ -311,7 +311,7 @@ HTTPを利用したストリーミング方式としてはHLS(HTTP LiveStreaming
 
 \subsection{サーバ性能の観測値に基づく動的ブロック番号選択方式}
 \label{diff}
-当方式はあるTCP接続に対して何ブロック後ろのブロックを要求するかを算出するために,そのTCP接続の直前のブロック取得間隔を計測し用いる方式である.
+当方式はあるTCP接続に対して何ブロック後ろのブロックを要求するかを算出するために,そのTCP接続の直前のブロック取得間隔を計測し,ブロック番号の選択に用いる方式である.
 以下に疑似コードを示す.
 最も性能の高いTCP接続には最も若番として0を割り当てる.
 
@@ -826,6 +826,8 @@ M. N. Garcia, D. Dytko and A. Raake, "Quality impact due to initial loading, sta
 
 \bibitem{streaming}
 Ali C. Begen, Tankut Akgul, and Mark Baugher, "Watching Video over the Web - Part I: Streaming Protocols", IEEE Internet Computing, Vol.15, No.2, pp.54--63, 2011.
+
+\newpage
 
 \bibitem{cdn}
 Janaka L. Wijekoon, Erwin H. Harahap, Rajitha L. Tennekoon, Hiroaki Nishi
